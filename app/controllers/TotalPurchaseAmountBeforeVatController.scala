@@ -18,7 +18,7 @@ package controllers
 
 import controllers.actions.*
 import forms.TotalPurchaseAmountBeforeVatFormProvider
-import models.{Mode, UserAnswers}
+import models.{InvoiceType, Mode, SupplierTaxNumber, UserAnswers}
 import navigation.Navigator
 import pages.*
 import play.api.data.Form
@@ -49,20 +49,28 @@ class TotalPurchaseAmountBeforeVatController @Inject() (
 
   val form: Form[BigDecimal] = formProvider()
 
-  private def backLink(mode: Mode)(userAnswers: UserAnswers) = userAnswers.get(RefundingCountryPage) match {
-    case Some("DE") =>
-      if (userAnswers.get(SupplierVatRegistrationNumberPage).isDefined) {
-        routes.SupplierVatRegistrationNumberController.onPageLoad(mode)
-      } else if (userAnswers.get(SupplierTaxIdentifierNumberPage).isDefined) {
+  private def backLink(mode: Mode)(userAnswers: UserAnswers) = {
+    val maybeCountry = userAnswers.get(RefundingCountryPage)
+    val maybeInvoiceType = userAnswers.get(InvoiceTypePage)
+    val maybeSupplierTaxChoice = userAnswers.get(SupplierTaxNumberPage)
+
+    (maybeCountry, maybeInvoiceType, maybeSupplierTaxChoice) match {
+      case (Some("DE"), Some(invType), Some(SupplierTaxNumber.Taxidentifiernumber))
+          if invType == InvoiceType.StandardInvoice || invType == InvoiceType.SimplifiedInvoice =>
         routes.SupplierTaxIdentifierNumberController.onPageLoad(mode)
-      } else {
-        routes.SupplierTaxNumberController.onPageLoad(mode)
-      }
-    case _ =>
-      userAnswers.get(SupplierVatRegistrationNumberPage) match {
-        case Some(_) => routes.SupplierVatRegistrationNumberController.onPageLoad(mode)
-        case None    => routes.SimplifiedInvoiceVatRegCheckController.onPageLoad(mode)
-      }
+      case (Some("DE"), _, _) =>
+        // For Germany, prefer VAT reg if present, otherwise tax number page
+        if (userAnswers.get(SupplierVatRegistrationNumberPage).isDefined) {
+          routes.SupplierVatRegistrationNumberController.onPageLoad(mode)
+        } else {
+          routes.SupplierTaxNumberController.onPageLoad(mode)
+        }
+      case _ =>
+        userAnswers.get(SupplierVatRegistrationNumberPage) match {
+          case Some(_) => routes.SupplierVatRegistrationNumberController.onPageLoad(mode)
+          case None    => routes.SimplifiedInvoiceVatRegCheckController.onPageLoad(mode)
+        }
+    }
   }
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
@@ -70,7 +78,6 @@ class TotalPurchaseAmountBeforeVatController @Inject() (
       case None        => form
       case Some(value) => form.fill(value)
     }
-
     val (currencyName, prefix) = resolveCurrency(request.userAnswers)
     Ok(view(preparedForm, mode, backLink(mode)(request.userAnswers), prefix, currencyName))
   }
