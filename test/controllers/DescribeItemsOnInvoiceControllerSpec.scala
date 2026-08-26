@@ -66,6 +66,63 @@ class DescribeItemsOnInvoiceControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
+    "must mark arrival and persist when opened in CheckMode and flag missing" in {
+      val mockSessionRepository = mock[SessionRepository]
+      when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
+
+      val application = applicationBuilder(userAnswers = Some(emptyUserAnswers))
+        .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
+        .build()
+
+      running(application) {
+        val request = FakeRequest(GET, describeItemsOnInvoiceCheckModeRoute)
+        val result = route(application, request).value
+
+        status(result) mustEqual OK
+
+        val captor = ArgumentCaptor.forClass(classOf[models.UserAnswers])
+        org.mockito.Mockito.verify(mockSessionRepository, org.mockito.Mockito.times(1)).set(captor.capture())
+        val saved = captor.getValue
+        saved.get(pages.DescribeItemsArrivedFromCheckYourAnswersPage).value mustBe true
+      }
+    }
+
+    "must not persist when opened in CheckMode and flag already set" in {
+      val mockSessionRepository = mock[SessionRepository]
+      when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
+
+      val userAnswers = emptyUserAnswers.set(pages.DescribeItemsArrivedFromCheckYourAnswersPage, true).success.value
+
+      val application = applicationBuilder(userAnswers = Some(userAnswers))
+        .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
+        .build()
+
+      running(application) {
+        val request = FakeRequest(GET, describeItemsOnInvoiceCheckModeRoute)
+        val result = route(application, request).value
+
+        status(result) mustEqual OK
+        org.mockito.Mockito.verify(mockSessionRepository, org.mockito.Mockito.times(0)).set(any())
+      }
+    }
+
+    "must not persist arrival flag when opened in NormalMode" in {
+      val mockSessionRepository = mock[SessionRepository]
+      when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
+
+      val application = applicationBuilder(userAnswers = Some(emptyUserAnswers))
+        .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
+        .build()
+
+      running(application) {
+        val request = FakeRequest(GET, describeItemsOnInvoiceRoute)
+        val result = route(application, request).value
+
+        status(result) mustEqual OK
+        org.mockito.Mockito.verify(mockSessionRepository, org.mockito.Mockito.times(0)).set(any())
+      }
+    }
+
     "must short-circuit to purchase CYA in CheckMode when value unchanged" in {
       val mockSessionRepository = mock[SessionRepository]
 

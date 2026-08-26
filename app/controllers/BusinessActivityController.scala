@@ -28,6 +28,7 @@ import queries.TraderKnownFactsQuery
 import repositories.SessionRepository
 import services.EuVatRefundsService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
+import utils.ControllerHelpers.*
 import views.html.BusinessActivityView
 
 import javax.inject.Inject
@@ -57,7 +58,7 @@ class BusinessActivityController @Inject() (
   }
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
-    val preparedForm = request.userAnswers.get(BusinessActivityPage).fold(form)(form.fill)
+    val preparedForm = form.preparedFromAnswers(BusinessActivityPage, request.userAnswers)
     Future.successful(Ok(view(preparedForm, mode, backLink(mode), baCode(request.userAnswers))))
   }
 

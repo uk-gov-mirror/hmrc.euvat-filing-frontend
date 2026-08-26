@@ -439,7 +439,7 @@ class PurchaseTypeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must redirect to change-describe-items when arrived-from-describe flag set" in {
+    "must ignore stale describe-arrival flag and follow sub-type continuation when changed in CheckMode" in {
       val mockSessionRepository = mock[SessionRepository]
       when(mockSessionRepository.set(any())).thenReturn(Future.successful(true))
 
@@ -463,12 +463,14 @@ class PurchaseTypeControllerSpec extends SpecBase with MockitoSugar {
         val result = route(application, request).value
 
         status(result) mustEqual SEE_OTHER
-        redirectLocation(result).value mustEqual controllers.routes.DescribeItemsOnInvoiceController.onPageLoad(CheckMode).url
+        redirectLocation(result).value mustEqual controllers.purchase.routes.PurchaseSubTypeController
+          .onPageLoad(models.PurchaseType.urlSlugForPurchaseType(models.Fuel), models.CheckMode)
+          .url
         verify(mockSessionRepository, times(2)).set(any())
       }
     }
 
-    "must redirect to change-describe-items when arrived-from-describe flag set and value unchanged" in {
+    "must short-circuit to CYA when stale describe-arrival flag is set and value unchanged" in {
       val mockSessionRepository = mock[SessionRepository]
       when(mockSessionRepository.set(any())).thenReturn(Future.successful(true))
 
@@ -493,7 +495,78 @@ class PurchaseTypeControllerSpec extends SpecBase with MockitoSugar {
         val result = route(application, request).value
 
         status(result) mustEqual SEE_OTHER
+        redirectLocation(result).value mustEqual controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad().url
+        verify(mockSessionRepository, times(0)).set(any())
+      }
+    }
+
+    "must redirect to change-describe-items when value unchanged and Other + none subtype applies" in {
+      val mockSessionRepository = mock[SessionRepository]
+      when(mockSessionRepository.set(any())).thenReturn(Future.successful(true))
+
+      val userAnswers = emptyUserAnswers
+        .set(pages.PurchaseTypePage, models.Other)
+        .success
+        .value
+        .set(pages.PurchaseSubTypePage, "10.99")
+        .success
+        .value
+        .set(pages.DescribeItemsOnInvoicePage, "details")
+        .success
+        .value
+        .set(pages.DescribeItemsArrivedFromCheckYourAnswersPage, true)
+        .success
+        .value
+
+      val application = applicationBuilder(userAnswers = Some(userAnswers))
+        .overrides(
+          bind[SessionRepository].toInstance(mockSessionRepository)
+        )
+        .build()
+
+      running(application) {
+        val request = FakeRequest(POST, routes.PurchaseTypeController.onSubmit(CheckMode).url)
+          .withFormUrlEncodedBody("value" -> models.Other.toString)
+        val result = route(application, request).value
+
         redirectLocation(result).value mustEqual controllers.routes.DescribeItemsOnInvoiceController.onPageLoad(CheckMode).url
+        verify(mockSessionRepository, times(1)).set(any())
+      }
+    }
+
+    "must prefix redirect URL when X-Forwarded-Prefix header present on describe-flag removal" in {
+      val mockSessionRepository = mock[SessionRepository]
+      when(mockSessionRepository.set(any())).thenReturn(Future.successful(true))
+
+      val userAnswers = emptyUserAnswers
+        .set(pages.PurchaseTypePage, models.Other)
+        .success
+        .value
+        .set(pages.PurchaseSubTypePage, "1.99")
+        .success
+        .value
+        .set(pages.DescribeItemsOnInvoicePage, "details")
+        .success
+        .value
+        .set(pages.DescribeItemsArrivedFromCheckYourAnswersPage, true)
+        .success
+        .value
+
+      val application = applicationBuilder(userAnswers = Some(userAnswers))
+        .overrides(
+          bind[SessionRepository].toInstance(mockSessionRepository)
+        )
+        .build()
+
+      running(application) {
+        val request = FakeRequest(POST, routes.PurchaseTypeController.onSubmit(CheckMode).url)
+          .withHeaders("X-Forwarded-Prefix" -> "/prefix")
+          .withFormUrlEncodedBody("value" -> models.Other.toString)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual SEE_OTHER
+        redirectLocation(result).value mustEqual "/prefix" + controllers.routes.DescribeItemsOnInvoiceController.onPageLoad(CheckMode).url
         verify(mockSessionRepository, times(1)).set(any())
       }
     }
@@ -554,6 +627,58 @@ class PurchaseTypeControllerSpec extends SpecBase with MockitoSugar {
         status(result) mustEqual SEE_OTHER
         redirectLocation(result).value mustEqual controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad().url
         verify(mockSessionRepository, times(1)).set(any())
+      }
+    }
+
+    "must redirect to CYA (not describe-items) in CheckMode when no subcodes exist and stale describe-arrival flag is present" in {
+      val mockSessionRepository = mock[SessionRepository]
+      when(mockSessionRepository.set(any())).thenReturn(Future.successful(true))
+
+      val fakeConfig = new ConfigPurchaseMapping() {
+        override def subcodesFor(country: String, parentKey: String): Seq[(String, String)] =
+          if (country == "LT" && parentKey == models.Fuel.toString) Seq.empty
+          else super.subcodesFor(country, parentKey)
+      }
+
+      val userAnswers = emptyUserAnswers
+        .set(pages.RefundingCountryPage, "LT")
+        .success
+        .value
+        .set(pages.PurchaseTypePage, models.Other)
+        .success
+        .value
+        .set(pages.PurchaseSubTypePage, "10.99")
+        .success
+        .value
+        .set(pages.DescribeItemsOnInvoicePage, "old details")
+        .success
+        .value
+        .set(pages.DescribeItemsArrivedFromCheckYourAnswersPage, true)
+        .success
+        .value
+
+      val application = applicationBuilder(userAnswers = Some(userAnswers))
+        .overrides(
+          bind[ConfigPurchaseMapping].toInstance(fakeConfig),
+          bind[SessionRepository].toInstance(mockSessionRepository)
+        )
+        .build()
+
+      running(application) {
+        val request = FakeRequest(POST, routes.PurchaseTypeController.onSubmit(CheckMode).url)
+          .withFormUrlEncodedBody("value" -> models.Fuel.toString)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual SEE_OTHER
+        redirectLocation(result).value mustEqual controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad().url
+
+        val captor = ArgumentCaptor.forClass(classOf[models.UserAnswers])
+        verify(mockSessionRepository, times(2)).set(captor.capture())
+        val savedAfterFlagCleanup = captor.getAllValues.get(1)
+
+        savedAfterFlagCleanup.get(pages.DescribeItemsArrivedFromCheckYourAnswersPage) mustBe None
+        savedAfterFlagCleanup.get(pages.DescribeItemsOnInvoicePage) mustBe None
       }
     }
 

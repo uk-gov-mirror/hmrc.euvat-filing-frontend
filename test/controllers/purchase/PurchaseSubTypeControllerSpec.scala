@@ -360,6 +360,60 @@ class PurchaseSubTypeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
+    "must clear describe items data when changing Other subtype away from none option" in {
+      val fakeConfig = new ConfigPurchaseMapping() {
+        override def subcodesFor(country: String, parentKey: String) =
+          Seq(("10.99", "purchase.sub.other.99"), ("10.6", "purchase.sub.other.6"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq.empty
+        override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
+      }
+
+      val mockSessionRepository = mock[repositories.SessionRepository]
+      when(mockSessionRepository.set(any())) thenReturn scala.concurrent.Future.successful(true)
+
+      val userAnswers = emptyUserAnswers
+        .set(pages.RefundingCountryPage, "DE")
+        .success
+        .value
+        .set(pages.PurchaseTypePage, models.Other)
+        .success
+        .value
+        .set(pages.PurchaseSubTypePage, "10.99")
+        .success
+        .value
+        .set(pages.DescribeItemsOnInvoicePage, "previous purchase description")
+        .success
+        .value
+        .set(pages.DescribeItemsArrivedFromCheckYourAnswersPage, true)
+        .success
+        .value
+
+      val application = applicationBuilder(userAnswers = Some(userAnswers))
+        .overrides(
+          bind[ConfigPurchaseMapping].toInstance(fakeConfig),
+          bind[repositories.SessionRepository].toInstance(mockSessionRepository)
+        )
+        .build()
+
+      running(application) {
+        val request = FakeRequest(POST, controllers.purchase.routes.PurchaseSubTypeController.onSubmit("purchase-type-other", models.CheckMode).url)
+          .withFormUrlEncodedBody(("value", "10.6"))
+
+        val result = route(application, request).value
+
+        status(result) mustEqual SEE_OTHER
+        redirectLocation(result).value mustEqual controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad().url
+
+        val captor = org.mockito.ArgumentCaptor.forClass(classOf[models.UserAnswers])
+        verify(mockSessionRepository, times(1)).set(captor.capture())
+        val saved = captor.getValue
+
+        saved.get(pages.PurchaseSubTypePage) mustBe Some("10.6")
+        saved.get(pages.DescribeItemsOnInvoicePage) mustBe None
+        saved.get(pages.DescribeItemsArrivedFromCheckYourAnswersPage) mustBe None
+      }
+    }
+
     "must save selection and redirect to InvoiceType when no children exist" in {
       val fakeConfig = new ConfigPurchaseMapping() {
         override def subcodesFor(country: String, parentKey: String) = Seq(("1", "purchase.sub.fuel.1"))

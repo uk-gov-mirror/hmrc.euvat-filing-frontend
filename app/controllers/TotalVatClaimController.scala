@@ -21,7 +21,7 @@ import forms.TotalVatClaimFormProvider
 import models.Mode
 import models.requests.DataRequest
 import navigation.Navigator
-import pages.{PurchaseTypePage, RefundingCurrencyPage, TotalVatClaimPage, TotalVatPaidPage}
+import pages.{TotalVatClaimPage, TotalVatPaidPage}
 import play.api.data.Form
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents}
@@ -55,21 +55,18 @@ class TotalVatClaimController @Inject() (
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
     // Prepare the form pre-filling from session when present
-    val preparedForm = preparedFormFromAnswers(_.get(TotalVatClaimPage), form)
+    val preparedForm = form.preparedFromAnswers(TotalVatClaimPage, request.userAnswers)
 
     // Resolve the display currency symbol (fallback to Euro)
     val currencySymbol = currencySymbolFromSession(request.userAnswers, currencyConfig.currencyConfig)
 
-    // Render the OK view using the shared helper
     okView(preparedForm, mode, currencySymbol)
   }
 
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
-    // Bind form and handle invalid/valid branches using shared helpers
     form
       .bindFromRequest()
       .fold(
-        // On validation errors render BadRequest with consistent currency symbol
         formWithErrors => Future.successful(badRequestView(formWithErrors, mode)),
         value => handleSubmit(value, mode)
       )
@@ -77,16 +74,21 @@ class TotalVatClaimController @Inject() (
 
   private def handleSubmit(value: BigDecimal, mode: Mode)(implicit request: DataRequest[?]) = {
     shortCircuitPersistAndThen(
-      TotalVatClaimPage,
-      value,
-      mode,
-      request.userAnswers,
-      sessionRepository,
-      navigator.nextPage(TotalVatClaimPage, mode, request.userAnswers),
-      controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+      ShortCircuitParams(
+        TotalVatClaimPage,
+        value,
+        mode,
+        request.userAnswers,
+        sessionRepository,
+        navigator.nextPage(TotalVatClaimPage, mode, request.userAnswers),
+        controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+      )
     ) { updated =>
-      if (compareWithPage(value, TotalVatPaidPage, updated)(_ > _)) Future.successful(Redirect(routes.VatClaimWarningController.onPageLoad(mode)))
-      else Future.successful(Redirect(navigator.nextPage(TotalVatClaimPage, mode, updated)))
+      if (compareWithPage(value, TotalVatPaidPage, updated)(_ > _)) {
+        Future.successful(Redirect(routes.VatClaimWarningController.onPageLoad(mode)))
+      } else {
+        Future.successful(Redirect(navigator.nextPage(TotalVatClaimPage, mode, updated)))
+      }
     }
   }
 

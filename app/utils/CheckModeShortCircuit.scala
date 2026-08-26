@@ -31,7 +31,7 @@ object CheckModeShortCircuit {
     *   - If in CheckMode and the stored value for `page` equals `newValue` -> immediately redirect to `unchangedRedirect`.
     *   - Otherwise persist the new value and invoke `onSaved` to produce the resulting Future[Result].
     */
-  def apply[T](
+  case class ShortCircuitArgs[T](
     page: QuestionPage[T],
     newValue: T,
     mode: Mode,
@@ -39,7 +39,21 @@ object CheckModeShortCircuit {
     sessionRepository: SessionRepository,
     unchangedRedirect: Call,
     onSaved: UserAnswers => Future[Result]
-  )(implicit fmt: Format[T], ec: ExecutionContext): Future[Result] = {
+  )
+
+  def apply[T](args: ShortCircuitArgs[T])(implicit fmt: Format[T], ec: ExecutionContext): Future[Result] = {
+
+    import args.*
+
+    def setAndPersist(onSaved: UserAnswers => Future[Result])(implicit
+      fmt: Format[T],
+      ec: ExecutionContext
+    ): Future[Result] =
+      for {
+        updated <- Future.fromTry(userAnswers.set(page, newValue))
+        _       <- sessionRepository.set(updated)
+        res     <- onSaved(updated)
+      } yield res
 
     mode match {
       case models.CheckMode =>
@@ -47,19 +61,11 @@ object CheckModeShortCircuit {
           case Some(prev) if prev == newValue =>
             Future.successful(play.api.mvc.Results.Redirect(unchangedRedirect))
           case _ =>
-            for {
-              updated <- Future.fromTry(userAnswers.set(page, newValue))
-              _       <- sessionRepository.set(updated)
-              res     <- onSaved(updated)
-            } yield res
+            setAndPersist(onSaved)
         }
 
       case _ =>
-        for {
-          updated <- Future.fromTry(userAnswers.set(page, newValue))
-          _       <- sessionRepository.set(updated)
-          res     <- onSaved(updated)
-        } yield res
+        setAndPersist(onSaved)
     }
   }
 
@@ -67,14 +73,27 @@ object CheckModeShortCircuit {
     *
     * Useful when callers need to perform additional updates and persist once.
     */
-  def applyNoPersist[T](
+  case class ShortCircuitNoPersistArgs[T](
     page: QuestionPage[T],
     newValue: T,
     mode: Mode,
     userAnswers: UserAnswers,
     unchangedRedirect: Call,
     onSaved: UserAnswers => Future[Result]
-  )(implicit fmt: Format[T], ec: ExecutionContext): Future[Result] = {
+  )
+
+  def applyNoPersist[T](args: ShortCircuitNoPersistArgs[T])(implicit fmt: Format[T], ec: ExecutionContext): Future[Result] = {
+
+    import args.*
+
+    def setNoPersist(onSaved: UserAnswers => Future[Result])(implicit
+      fmt: Format[T],
+      ec: ExecutionContext
+    ): Future[Result] =
+      for {
+        updated <- Future.fromTry(userAnswers.set(page, newValue))
+        res     <- onSaved(updated)
+      } yield res
 
     mode match {
       case models.CheckMode =>
@@ -82,39 +101,12 @@ object CheckModeShortCircuit {
           case Some(prev) if prev == newValue =>
             Future.successful(play.api.mvc.Results.Redirect(unchangedRedirect))
           case _ =>
-            for {
-              updated <- Future.fromTry(userAnswers.set(page, newValue))
-              res     <- onSaved(updated)
-            } yield res
+            setNoPersist(onSaved)
         }
 
       case _ =>
-        for {
-          updated <- Future.fromTry(userAnswers.set(page, newValue))
-          res     <- onSaved(updated)
-        } yield res
+        setNoPersist(onSaved)
     }
   }
 
-  /** Check-only variant: if in CheckMode and the stored value equals the new value return a Redirect result to `unchangedRedirect`. Otherwise return
-    * None.
-    *
-    * This is useful when callers only need the unchanged short-circuit decision and will handle persistence themselves.
-    */
-  def shortCircuitIfUnchanged[T](
-    page: QuestionPage[T],
-    newValue: T,
-    mode: Mode,
-    userAnswers: UserAnswers,
-    unchangedRedirect: Call
-  )(implicit fmt: Format[T]): Option[Result] = {
-    mode match {
-      case models.CheckMode =>
-        userAnswers.get(page) match {
-          case Some(prev) if prev == newValue => Some(play.api.mvc.Results.Redirect(unchangedRedirect))
-          case _                              => None
-        }
-      case _ => None
-    }
-  }
 }

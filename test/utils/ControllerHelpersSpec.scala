@@ -37,16 +37,17 @@ import play.api.mvc.Call
 import org.mockito.Mockito.{never, times, verify}
 import org.mockito.ArgumentMatchers.any as anyA
 import org.mockito.ArgumentCaptor
+import utils.ControllerHelpers.*
 
 class ControllerHelpersSpec extends SpecBase {
 
-  "preparedFormFromAnswers" - {
+  "Form.preparedFromAnswers" - {
     "returns empty form when no value stored" in {
       implicit val request: DataRequest[?] = DataRequest(FakeRequest("GET", "/"), userAnswersId, "", "", emptyUserAnswers)
 
       val form: Form[String] = Form(single("v" -> text))
 
-      val prepared = ControllerHelpers.preparedFormFromAnswers(_.get(SuppliersNamePage), form)
+      val prepared = form.preparedFromAnswers(pages.SuppliersNamePage, request.userAnswers)
 
       prepared.value mustBe None
     }
@@ -58,31 +59,9 @@ class ControllerHelpersSpec extends SpecBase {
 
       val form: Form[String] = Form(single("v" -> text))
 
-      val prepared = ControllerHelpers.preparedFormFromAnswers(_.get(SuppliersNamePage), form)
+      val prepared = form.preparedFromAnswers(pages.SuppliersNamePage, request.userAnswers)
 
       prepared.value.value mustBe "Acme Ltd"
-    }
-  }
-
-  "persistAndThen" - {
-    "persists built UserAnswers once and runs continuation" in {
-      // prepare built answers and a Try
-      val builtAnswers = emptyUserAnswers.set(SuppliersNamePage, "PersistMe").success.value
-      val userAnswersTry = Success(builtAnswers)
-
-      // mock session repository to accept the set
-      val mockRepo = mock[SessionRepository]
-      when(mockRepo.set(any[models.UserAnswers])) thenReturn Future.successful(true)
-
-      implicit val request: DataRequest[?] = DataRequest(FakeRequest("POST", "/"), userAnswersId, "", "", builtAnswers)
-
-      val fut = ControllerHelpers.persistAndThen(userAnswersTry, mockRepo) { ua =>
-        Future.successful(Ok("done"))
-      }
-
-      val result = fut.futureValue
-
-      result.header.status mustBe OK
     }
   }
 
@@ -139,13 +118,15 @@ class ControllerHelpersSpec extends SpecBase {
       val fut = ControllerHelpers.shortCircuitPersistAndThen[
         BigDecimal
       ](
-        TotalVatPaidPage,
-        BigDecimal(10),
-        CheckMode,
-        ua,
-        mockRepo,
-        Call("GET", "/next"),
-        controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+        ShortCircuitParams(
+          pages.TotalVatPaidPage,
+          BigDecimal(10),
+          CheckMode,
+          ua,
+          mockRepo,
+          Call("GET", "/next"),
+          controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+        )
       ) { _ =>
         Future.successful(Ok("saved"))
       }
@@ -168,13 +149,15 @@ class ControllerHelpersSpec extends SpecBase {
       val fut = ControllerHelpers.shortCircuitPersistAndThen[
         BigDecimal
       ](
-        TotalVatPaidPage,
-        BigDecimal(20),
-        CheckMode,
-        ua,
-        mockRepo,
-        Call("GET", "/next"),
-        controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+        ShortCircuitParams(
+          pages.TotalVatPaidPage,
+          BigDecimal(20),
+          CheckMode,
+          ua,
+          mockRepo,
+          Call("GET", "/next"),
+          controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+        )
       ) { _ =>
         Future.successful(Ok("saved"))
       }
@@ -196,13 +179,15 @@ class ControllerHelpersSpec extends SpecBase {
       val fut = ControllerHelpers.shortCircuitPersistAndThen[
         BigDecimal
       ](
-        TotalVatPaidPage,
-        BigDecimal(20),
-        NormalMode,
-        ua,
-        mockRepo,
-        Call("GET", "/next"),
-        controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+        ShortCircuitParams(
+          pages.TotalVatPaidPage,
+          BigDecimal(20),
+          NormalMode,
+          ua,
+          mockRepo,
+          Call("GET", "/next"),
+          controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+        )
       ) { _ =>
         Future.successful(Ok("saved"))
       }
@@ -276,6 +261,69 @@ class ControllerHelpersSpec extends SpecBase {
       res.header.status mustBe OK
 
       verify(mockRepo, never()).set(anyA())
+    }
+  }
+
+  "bothDefined" - {
+    "returns tuple when both defined" in {
+      ControllerHelpers.bothDefined(Some(1), Some("a")) mustBe Some((1, "a"))
+    }
+
+    "returns None when either is missing" in {
+      ControllerHelpers.bothDefined(None, Some("a")) mustBe None
+      ControllerHelpers.bothDefined(Some(1), None) mustBe None
+    }
+  }
+
+  "pathForSlug" - {
+    "builds change path in CheckMode without prefix" in {
+      ControllerHelpers.pathForSlug("foo", CheckMode, "") mustBe "/change-foo"
+    }
+
+    "builds change path in CheckMode with prefix" in {
+      ControllerHelpers.pathForSlug("bar", CheckMode, "/prefix") mustBe "/prefix/change-bar"
+    }
+
+    "builds normal path in NormalMode without prefix" in {
+      ControllerHelpers.pathForSlug("baz", NormalMode, "") mustBe "/baz"
+    }
+  }
+
+  "redirectToInvoiceTypeOrCYA" - {
+    "redirects to purchase CYA in CheckMode" in {
+      val res = ControllerHelpers.redirectToInvoiceTypeOrCYA(CheckMode)
+      res.header.status mustBe SEE_OTHER
+      res.header.headers.get("Location") mustBe Some(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad().url)
+    }
+
+    "redirects to InvoiceType in NormalMode" in {
+      val res = ControllerHelpers.redirectToInvoiceTypeOrCYA(NormalMode)
+      res.header.status mustBe SEE_OTHER
+      res.header.headers.get("Location") mustBe Some(controllers.routes.InvoiceTypeController.onPageLoad(NormalMode).url)
+    }
+  }
+
+  "currencyNameAndPrefix" - {
+    "returns configured name and prefix" in {
+      val updatedUA = emptyUserAnswers.set(pages.RefundingCountryPage, "XX").success.value
+      implicit val request: DataRequest[?] = DataRequest(FakeRequest("GET", "/"), userAnswersId, "", "", updatedUA)
+
+      val conf = play.api.Configuration(
+        ConfigFactory.parseString(
+          """
+              |currency.mapping {
+              |  XX = ["xcoin|XCO|X"]
+              |}
+            """.stripMargin
+        )
+      )
+
+      val cfg = new CurrencyConfig(conf)
+
+      val (name, prefix) = ControllerHelpers.currencyNameAndPrefix(updatedUA, cfg.currencyConfig)
+
+      name.toLowerCase must include("xcoin")
+      prefix           must include("X")
     }
   }
 

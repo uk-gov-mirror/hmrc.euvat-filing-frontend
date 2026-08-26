@@ -115,7 +115,8 @@ class RefundingCountryController @Inject() (
                                            PurchaseSubTypePage,
                                            PurchaseSubTypeLabelPage,
                                            PurchaseSubCategoryPage,
-                                           PurchaseSubCategoryLabelPage
+                                           PurchaseSubCategoryLabelPage,
+                                           DescribeItemsOnInvoicePage
                                          ).foldLeft(Future.successful(updatedAnswers1)) { (answersF, page) =>
                                            answersF.flatMap(answers => Future.fromTry(answers.remove(page)))
                                          }.flatMap(answers => Future.fromTry(answers.set(CountryChangedPage, true)))

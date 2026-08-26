@@ -34,13 +34,6 @@ import views.html.TotalVatPaidView
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-/** Handles the total VAT paid input.
-  *
-  * Behaviour notes:
-  *   - Uses `utils.CurrencyResolver.currencyNameAndPrefix` to render currency prefixes consistently across views.
-  *   - In purchase journeys running in `CheckMode` we short-circuit unchanged submissions back to the Purchase CYA without persisting to maintain a
-  *     single-write invariant. If the value changes we persist once and then redirect appropriately.
-  */
 class TotalVatPaidController @Inject() (
   override val messagesApi: MessagesApi,
   sessionRepository: SessionRepository,
@@ -60,13 +53,10 @@ class TotalVatPaidController @Inject() (
 
   private def backLink(mode: Mode) = routes.TotalPurchaseAmountBeforeVatController.onPageLoad(mode)
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
-    // Prepare the form by reading any stored TotalVatPaid from session
-    val preparedForm = preparedFormFromAnswers(_.get(TotalVatPaidPage), form)
+    val preparedForm = form.preparedFromAnswers(TotalVatPaidPage, request.userAnswers)
 
-    // Resolve the currency display name and prefix for the view
     val (currencyName, prefix) = currencyNameAndPrefix(request.userAnswers, currencyConfig.currencyConfig)
 
-    // Render OK view using shared helper
     okView(preparedForm, mode, prefix, currencyName)
   }
 
@@ -81,25 +71,27 @@ class TotalVatPaidController @Inject() (
 
   private def handleSubmit(value: BigDecimal, mode: Mode)(implicit request: DataRequest[?]) = {
     shortCircuitPersistAndThen(
-      TotalVatPaidPage,
-      value,
-      mode,
-      request.userAnswers,
-      sessionRepository,
-      navigator.nextPage(TotalVatPaidPage, mode, request.userAnswers),
-      controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+      ShortCircuitParams(
+        TotalVatPaidPage,
+        value,
+        mode,
+        request.userAnswers,
+        sessionRepository,
+        navigator.nextPage(TotalVatPaidPage, mode, request.userAnswers),
+        controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
+      )
     ) { updated =>
-      if (compareWithPage(value, TotalPurchaseAmountBeforeVatPage, updated)(_ >= _))
+      if (compareWithPage(value, TotalPurchaseAmountBeforeVatPage, updated)(_ >= _)) {
         Future.successful(Redirect(routes.VatPaidWarningController.onPageLoad(mode)))
-      else Future.successful(Redirect(navigator.nextPage(TotalVatPaidPage, mode, updated)))
+      } else {
+        Future.successful(Redirect(navigator.nextPage(TotalVatPaidPage, mode, updated)))
+      }
     }
   }
 
-  // Render OK view with prepared form and currency details
   private def okView(preparedForm: Form[BigDecimal], mode: Mode, prefix: String, currencyName: String)(implicit request: DataRequest[?]) =
     Ok(view(preparedForm, mode, backLink(mode), prefix, currencyName))
 
-  // Render BadRequest view for invalid forms with consistent currency info
   private def badRequestView(formWithErrors: Form[?], mode: Mode)(implicit request: DataRequest[?]) = {
     val (currencyName, prefix) = currencyNameAndPrefix(request.userAnswers, currencyConfig.currencyConfig)
     BadRequest(view(formWithErrors, mode, backLink(mode), prefix, currencyName))

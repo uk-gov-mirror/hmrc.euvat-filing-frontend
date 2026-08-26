@@ -37,6 +37,7 @@ import views.html.SupplierVatRegistrationNumberView
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 class SupplierVatRegistrationNumberController @Inject() (
   override val messagesApi: MessagesApi,
@@ -70,101 +71,121 @@ class SupplierVatRegistrationNumberController @Inject() (
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
     // Remove any lingering SupplierTaxIdentifierNumber as VAT reg number page takes precedence
-    // Execute the cleanup asynchronously but continue to prepare and render the page
     for {
       updatedAnswers <- Future.fromTry(request.userAnswers.remove(SupplierTaxIdentifierNumberPage))
       _              <- sessionRepository.set(updatedAnswers)
     } yield None
 
-    val preparedForm = preparedFormFromAnswers(_.get(SupplierVatRegistrationNumberPage), form)
+    // Prepare the form pre-filling from session when present
+    val preparedForm = form.preparedFromAnswers(SupplierVatRegistrationNumberPage, request.userAnswers)
+
+    // Detect whether refunding country is Germany to inform the view
     val isGermany = request.userAnswers.get(RefundingCountryPage).exists(_.equalsIgnoreCase("DE"))
     okView(preparedForm, mode, isGermany)
   }
 
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
     val isGermany = request.userAnswers.get(RefundingCountryPage).exists(_.equalsIgnoreCase("DE"))
-
     form
       .bindFromRequest()
       .fold(
         formWithErrors => Future.successful(badRequestView(formWithErrors, mode, isGermany)),
         value => {
-          val changed = !request.userAnswers.get(SupplierVatRegistrationNumberPage).contains(value)
-          val cameFromInvoicePage = request.userAnswers.get(pages.SupplierVatRegistrationArrivedFromInvoicePage).contains(true)
-          // CheckMode short-circuit: unchanged and not arrived from invoice → straight back to CYA
-          if (mode == CheckMode && !changed && !cameFromInvoicePage)
+          if (shouldShortCircuit(value, mode, request.userAnswers)) {
             Future.successful(Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()))
-          else {
-            for {
-              updated <- Future.fromTry(request.userAnswers.set(SupplierVatRegistrationNumberPage, value))
-              // 7224: clear the VRN warning marker when the VRN genuinely changes
-              withFlag <- Future.fromTry(
-                            if (request.userAnswers.get(VrnWarningFlowPage).isDefined && changed)
-                              updated.set(VrnWarningFlowPage, false)
-                            else
-                              scala.util.Success(updated)
-                          )
-              // his refactor: drop the transient arrived-from-invoice flag before persisting
-              finalAnswers <- Future.fromTry(withFlag.remove(pages.SupplierVatRegistrationArrivedFromInvoicePage))
-              _            <- sessionRepository.set(finalAnswers)
-              result       <- checkDuplicate(value, finalAnswers, mode)
-            } yield result
+          } else {
+            buildFinalAnswersTry(request.userAnswers, value) match {
+              case Failure(_) => Future.successful(Redirect(routes.JourneyRecoveryController.onPageLoad()))
+              case Success(finalAnswers) =>
+                checkDuplicate(value, finalAnswers, mode).flatMap {
+                  case Left(res)      => Future.successful(res)
+                  case Right(cleaned) => persistAndRedirect(Success(cleaned), mode)
+                }
+            }
           }
         }
       )
   }
 
-  // Render OK with form and the Germany flag
+  private def shouldShortCircuit(value: String, mode: Mode, answers: UserAnswers): Boolean = {
+    val isCheckMode = mode == CheckMode
+    val isSupplierVatRegistrationNumber = answers.get(SupplierVatRegistrationNumberPage).contains(value)
+    val isSupplierVatRegistrationArrivedFromInvoicePage = answers.get(SupplierVatRegistrationArrivedFromInvoicePage).contains(true)
+    isCheckMode && isSupplierVatRegistrationNumber && !isSupplierVatRegistrationArrivedFromInvoicePage
+  }
+
+  private def buildFinalAnswersTry(answers: UserAnswers, value: String): Try[UserAnswers] = {
+    val changed = !answers.get(SupplierVatRegistrationNumberPage).contains(value)
+
+    for {
+      updated      <- answers.set(SupplierVatRegistrationNumberPage, value)
+      withFlag     <- if (answers.get(VrnWarningFlowPage).isDefined && changed) updated.set(VrnWarningFlowPage, false) else Success(updated)
+      finalAnswers <- withFlag.remove(pages.SupplierVatRegistrationArrivedFromInvoicePage)
+    } yield finalAnswers
+  }
+
   private def okView(preparedForm: Form[String], mode: Mode, isGermany: Boolean)(implicit request: DataRequest[?]) =
     Ok(view(preparedForm, mode, backLink(mode), isGermany))
 
-  // Render BadRequest for invalid form submissions
   private def badRequestView(formWithErrors: Form[String], mode: Mode, isGermany: Boolean)(implicit request: DataRequest[?]) =
     BadRequest(view(formWithErrors, mode, backLink(mode), isGermany))
 
-  private def checkDuplicate(vatNumber: String, answers: UserAnswers, mode: Mode)(implicit request: DataRequest[?]): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+  private def persistAndRedirect(userAnswersTry: Try[UserAnswers], mode: Mode)(implicit
+    request: DataRequest[?]
+  ): Future[Result] =
+    for {
+      persisted <- Future.fromTry(userAnswersTry)
+      _         <- sessionRepository.set(persisted)
+    } yield {
+      if (mode == CheckMode) {
+        Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad())
+      } else {
+        Redirect(navigator.nextPage(SupplierVatRegistrationNumberPage, mode, persisted))
+      }
+    }
 
-    val maybeRequest = for {
+  private def buildSupplierVrnCountRequest(answers: UserAnswers, vatNumber: String): Option[SupplierVrnCountRequest] =
+    for {
       applicationId <- answers.get(ClaimApplicationResponseQuery).map(_.applicationId)
       itemNumber    <- answers.get(AddPurchaseResponsePage).map(_.itemNumber)
       invoiceNumber <- answers.get(InvoiceNumberPage)
     } yield SupplierVrnCountRequest(applicationId.toLong, itemNumber, vatNumber, invoiceNumber)
 
-    maybeRequest match {
+  private def checkDuplicate(vatNumber: String, answers: UserAnswers, mode: Mode)(implicit
+    request: DataRequest[?]
+  ): Future[Either[Result, UserAnswers]] = {
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+    buildSupplierVrnCountRequest(answers, vatNumber) match {
       case Some(req) =>
         euVatRefundsService
           .getSupplierVrnCount(req)
           .flatMap { response =>
             if (response.duplicateCount > 0) {
-              Future.successful(Redirect(routes.SupplierVrnWarningController.onPageLoad(mode)))
+              // Duplicate: remove transient arrived flag and persist, then redirect to warning
+              val removeArrivedTry = answers.remove(SupplierVatRegistrationArrivedFromInvoicePage)
+              Future.fromTry(removeArrivedTry).flatMap { ua =>
+                sessionRepository.set(ua).map(_ => Left(Redirect(routes.SupplierVrnWarningController.onPageLoad(mode))))
+              }
             } else {
-              for {
-                cleared <- Future.fromTry(answers.remove(VrnWarningFlowPage))
-                _       <- sessionRepository.set(cleared)
-              } yield {
-                if (mode == CheckMode) {
-                  Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad())
-                } else {
-                  Redirect(navigator.nextPage(SupplierVatRegistrationNumberPage, mode, cleared))
-                }
+              // Not duplicate: compute cleaned answers (do not persist here), delegate persistence to caller
+              val clearedTry = for {
+                cleared <- answers.remove(VrnWarningFlowPage)
+                removed <- cleared.remove(SupplierVatRegistrationArrivedFromInvoicePage)
+              } yield removed
+
+              clearedTry match {
+                case Success(cleaned) => Future.successful(Right(cleaned))
+                case Failure(_)       => Future.successful(Left(Redirect(routes.JourneyRecoveryController.onPageLoad())))
               }
             }
           }
           .recover { case ex: Exception =>
             logger.error("Error retrieving supplier VRN count", ex)
-            Redirect(routes.JourneyRecoveryController.onPageLoad())
+            Left(Redirect(routes.JourneyRecoveryController.onPageLoad()))
           }
       case None =>
-        logger.warn("Missing data for duplicate VRN check")
-        Future.successful(Redirect(routes.JourneyRecoveryController.onPageLoad()))
-        val isPurchaseJourneyCheckMode = mode == CheckMode && answers.get(PurchaseTypePage).isDefined
-        Future.successful(
-          if (isPurchaseJourneyCheckMode)
-            Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad())
-          else
-            Redirect(routes.JourneyRecoveryController.onPageLoad())
-        )
+        logger.warn("Missing data for duplicate VRN check; skipping external check and persisting answers")
+        Future.successful(Right(answers))
     }
   }
 }

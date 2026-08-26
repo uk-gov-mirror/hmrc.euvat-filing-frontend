@@ -35,7 +35,7 @@ import views.html.RefundingCurrencyView
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
+import scala.util.{Success, Failure}
 
 class RefundingCurrencyController @Inject() (
   override val messagesApi: MessagesApi,
@@ -133,34 +133,42 @@ class RefundingCurrencyController @Inject() (
             // additional flags (`ClaimDetailsAmendedPage`, `CurrencyChangedPage`)
             // into a single Try before persisting once.
             CheckModeShortCircuit.applyNoPersist(
-              RefundingCurrencyPage,
-              currencyCode,
-              mode,
-              request.userAnswers,
-              purchaseCYA,
-              (answersAfterSet: UserAnswers) => {
-                // If the claim was previously marked completed and the
-                // currency changed, set the amended flag so downstream
-                // flows surface correct messaging.
-                val maybeAmendedTry =
-                  if (isChanged && request.userAnswers.get(ClaimDetailsCompletedPage).contains(true))
-                    answersAfterSet.set(ClaimDetailsAmendedPage, true)
-                  else Success(answersAfterSet)
+              CheckModeShortCircuit.ShortCircuitNoPersistArgs(
+                RefundingCurrencyPage,
+                currencyCode,
+                mode,
+                request.userAnswers,
+                purchaseCYA,
+                (answersAfterSet: UserAnswers) => {
+                  // If the claim was previously marked completed and the
+                  // currency changed, set the amended flag so downstream
+                  // flows surface correct messaging.
+                  val maybeAmendedTry =
+                    if (isChanged && request.userAnswers.get(ClaimDetailsCompletedPage).contains(true))
+                      answersAfterSet.set(ClaimDetailsAmendedPage, true)
+                    else Success(answersAfterSet)
 
-                // If the currency changed mark a dedicated flag so other
-                // pages can react to the change. Chain after amended flag.
-                val maybeCurrencyChangedTry = maybeAmendedTry.flatMap { ua =>
-                  if (isChanged) ua.set(CurrencyChangedPage, true) else Success(ua)
+                  // If the currency changed mark a dedicated flag so other
+                  // pages can react to the change. Chain after amended flag.
+                  val maybeCurrencyChangedTry = maybeAmendedTry.flatMap { ua =>
+                    if (isChanged) ua.set(CurrencyChangedPage, true) else Success(ua)
+                  }
+
+                  maybeCurrencyChangedTry match {
+                    case Success(finalAnswers) =>
+                      // Persist once and redirect: in CheckMode to the
+                      // Purchase CYA, otherwise follow the navigator.
+                      SaveAndRedirect.saveTryAndRedirect(
+                        Success(finalAnswers),
+                        sessionRepository,
+                        if (mode == models.CheckMode) purchaseCYA else navigator.nextPage(RefundingCurrencyPage, mode, finalAnswers)
+                      )
+                    case Failure(_) =>
+                      // Failure while composing UserAnswers -> 500
+                      Future.successful(InternalServerError("Failed to build UserAnswers"))
+                  }
                 }
-
-                Future
-                  .fromTry(maybeCurrencyChangedTry)
-                  .flatMap: finalAnswers =>
-                    sessionRepository
-                      .set(finalAnswers)
-                      .map: _ =>
-                        Redirect(navigator.nextPage(RefundingCurrencyPage, mode, finalAnswers))
-              }
+              )
             )
         }
     }

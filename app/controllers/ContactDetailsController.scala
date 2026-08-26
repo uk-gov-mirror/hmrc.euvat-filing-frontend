@@ -25,6 +25,7 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.SessionRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
+import utils.ControllerHelpers.*
 import views.html.ContactDetailsView
 
 import javax.inject.Inject
@@ -47,10 +48,7 @@ class ContactDetailsController @Inject() (
   private val form = formProvider()
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
-    val preparedForm = request.userAnswers.get(ContactDetailsPage) match {
-      case None        => form
-      case Some(value) => form.fill(value)
-    }
+    val preparedForm = form.preparedFromAnswers(ContactDetailsPage, request.userAnswers)
     Ok(view(preparedForm, mode, routes.RefundPeriodController.onPageLoad(mode)))
   }
 

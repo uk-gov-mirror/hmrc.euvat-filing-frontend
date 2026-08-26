@@ -20,15 +20,16 @@ import controllers.actions.*
 import controllers.helpers.PurchaseBackLinkHelper
 import forms.DescribeItemsOnInvoiceFormProvider
 import models.requests.DataRequest
-import models.{CheckMode, Mode, Other, PurchaseType}
+import models.{CheckMode, Mode, Other, PurchaseType, UserAnswers}
 import navigation.Navigator
-import pages.{DescribeItemsOnInvoicePage, PurchaseSubCategoryPage, PurchaseSubTypePage, PurchaseTypePage}
+import pages.{DescribeItemsArrivedFromCheckYourAnswersPage, DescribeItemsOnInvoicePage, PurchaseSubCategoryPage, PurchaseSubTypePage, PurchaseTypePage}
 import play.api.data.Form
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents}
 import repositories.SessionRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
-import utils.{CheckModeShortCircuit, ConfigPurchaseMapping}
+import utils.{CheckModeShortCircuit, ConfigPurchaseMapping, CountryCode}
+import utils.ControllerHelpers.*
 import views.html.DescribeItemsOnInvoiceView
 
 import javax.inject.Inject
@@ -49,24 +50,15 @@ class DescribeItemsOnInvoiceController @Inject() (
     extends FrontendBaseController
     with I18nSupport {
 
-  // instantiate the form for this request using the provider
   val form: Form[String] = formProvider()
 
-  /** Responsibilities and notes:
-    *   - Compute back-targets with `computeBackTarget`, which treats the special-case 'Other' purchase type differently (may route back to sub-type
-    *     or purchase type depending on configured options and sentinel values).
-    *   - Validate and persist a single `DescribeItemsOnInvoicePage` value.
-    *   - In CheckMode unchanged submissions are short-circuited back to the Purchase CYA to avoid extra writes; `utils.CheckModeShortCircuit` is used
-    *     to centralise that logic.
-    */
-  // Compute where the 'back' link should point for this page.
   private def computeBackTarget(mode: Mode)(implicit request: DataRequest[?]): Call =
-    // if the journey indicates the parent purchase type is 'other'
-    if (isPurchaseTypeOther(request)) determineBackForOther(mode)
-    // otherwise delegate to the generic purchase back-link helper
-    else PurchaseBackLinkHelper.computeBackTarget(mode)
+    if (isPurchaseTypeOther(request)) {
+      determineBackForOther(mode)
+    } else {
+      PurchaseBackLinkHelper.computeBackTarget(mode)
+    }
 
-  // Helper: determine whether the stored PurchaseType is `Other`.
   private def isPurchaseTypeOther(implicit request: DataRequest[?]): Boolean =
     request.userAnswers.get(PurchaseTypePage).contains(Other)
 
@@ -78,98 +70,79 @@ class DescribeItemsOnInvoiceController @Inject() (
   private def childIndicatesNone(implicit request: DataRequest[?]): Boolean =
     request.userAnswers.get(PurchaseSubCategoryPage).exists(v => v.split("\\.").lastOption.contains("99"))
 
-  // Determine whether the 'other' purchase parent has multiple subcodes.
   private def hasMultipleOtherSubcodes(country: String): Boolean =
     try {
       val opts = configPurchaseMapping.subcodesFor(country, "other")
-      // true when there is more than one option for 'other'
       opts.nonEmpty && opts.size > 1
     } catch { case _: Throwable => false }
 
-  // Select the appropriate back target when the overall purchase type is 'other'.
   private def determineBackForOther(mode: Mode)(implicit request: DataRequest[?]): Call =
-    // If parent indicates 'none' then we may route to the sub-type selection
     if (parentIndicatesNone) {
-      // find the configured country code and choose the correct back target
       utils.CountryCode.findCountryCode(request.userAnswers).fold(controllers.routes.PurchaseTypeController.onPageLoad(mode)) { country =>
         if (hasMultipleOtherSubcodes(country))
-          // when multiple 'other' subcodes exist, go back to the PurchaseSubType page
           controllers.purchase.routes.PurchaseSubTypeController.onPageLoad(PurchaseType.urlSlugForPurchaseType(Other), mode)
         else
-          // otherwise go back to the purchase type selection
           controllers.routes.PurchaseTypeController.onPageLoad(mode)
-      }
-    } else if (childIndicatesNone)
-      // if a child indicates none, go back to the purchase type page
+        }
+    } else if (childIndicatesNone) {
       controllers.routes.PurchaseTypeController.onPageLoad(mode)
-    else
-      // default back target when 'other' does not have special cases
+    } else {
       PurchaseBackLinkHelper.computeBackTarget(mode)
-
-  // Render the page on GET request.
-  def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
-    // prepare the form: fill with existing value if present
-    val preparedForm = request.userAnswers.get(DescribeItemsOnInvoicePage) match {
-      case None        => form
-      case Some(value) => form.fill(value)
     }
 
-    // When opened in CheckMode we mark the session so downstream pages
-    // (notably PurchaseTypeController) can detect that the user arrived
-    // from the describe-items change flow and return them here after
-    // editing the purchase type.
-    if (mode == CheckMode && !request.userAnswers.get(pages.DescribeItemsArrivedFromCheckYourAnswersPage).contains(true)) {
-      val markedTry = request.userAnswers.set(pages.DescribeItemsArrivedFromCheckYourAnswersPage, true)
+  def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
+    val preparedForm = form.preparedFromAnswers(DescribeItemsOnInvoicePage, request.userAnswers)
+
+    val backTarget = computeBackTarget(mode)
+    val arrived = request.userAnswers.get(DescribeItemsArrivedFromCheckYourAnswersPage).contains(true)
+
+    if (mode == CheckMode && !arrived) {
+      val markedTry = request.userAnswers.set(DescribeItemsArrivedFromCheckYourAnswersPage, true)
       Future.fromTry(markedTry).flatMap { updated =>
-        sessionRepository.set(updated).map(_ => Ok(view(preparedForm, mode, computeBackTarget(mode))))
+        sessionRepository.set(updated).map(_ => Ok(view(preparedForm, mode, backTarget)))
       }
-    } else Future.successful(Ok(view(preparedForm, mode, computeBackTarget(mode))))
+    } else {
+      Future.successful(Ok(view(preparedForm, mode, backTarget)))
+    }
   }
 
-  // Handle form submission on POST.
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
-    // bind the form from the request and handle validation/result
     form
       .bindFromRequest()
       .fold(
         formWithErrors =>
-          if (formWithErrors.errors.exists(_.message == "describeItemsOnInvoice.error.required"))
+          if (formWithErrors.errors.exists(_.message == "describeItemsOnInvoice.error.required")) {
             for {
               updatedAnswers <- Future.fromTry(request.userAnswers.set(DescribeItemsOnInvoicePage, ""))
               _              <- sessionRepository.set(updatedAnswers)
             } yield Redirect(routes.PurchaseWarningController.onPageLoad(mode))
-          else
-            // validation errors -> re-render the page with errors and back target
-            Future.successful(BadRequest(view(formWithErrors, mode, computeBackTarget(mode)))),
-        // successful bind -> process the submitted value
+          } else {
+            Future.successful(BadRequest(view(formWithErrors, mode, computeBackTarget(mode))))
+          },
         value =>
           if (mode == CheckMode) {
-            // In CheckMode: use CheckModeShortCircuit helper to either
-            // short-circuit unchanged submissions back to the Purchase CYA
-            // or to persist the new value once and then redirect.
             CheckModeShortCircuit(
-              DescribeItemsOnInvoicePage,
-              value,
-              mode,
-              request.userAnswers,
-              sessionRepository,
-              // redirect target when unchanged in CheckMode
-              controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad(),
-              // onSaved: once persisted, follow the normal navigator for this page (so warnings still display)
-              updated => Future.successful(Redirect(navigator.nextPage(DescribeItemsOnInvoicePage, mode, updated)))
+              CheckModeShortCircuit.ShortCircuitArgs(
+                DescribeItemsOnInvoicePage,
+                value,
+                mode,
+                request.userAnswers,
+                sessionRepository,
+                controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad(),
+                updated => Future.successful(Redirect(navigator.nextPage(DescribeItemsOnInvoicePage, mode, updated)))
+              )
             )
           } else {
-            // Normal mode: persist and redirect according to the navigator
             CheckModeShortCircuit(
-              DescribeItemsOnInvoicePage,
-              value,
-              mode,
-              request.userAnswers,
-              sessionRepository,
-              // next page determined by navigator for the current answers
-              navigator.nextPage(DescribeItemsOnInvoicePage, mode, request.userAnswers),
-              // onSaved: redirect to the navigator-determined next page
-              updated => Future.successful(Redirect(navigator.nextPage(DescribeItemsOnInvoicePage, mode, updated)))
+              CheckModeShortCircuit.ShortCircuitArgs(
+                DescribeItemsOnInvoicePage,
+                value,
+                mode,
+                request.userAnswers,
+                sessionRepository,
+                navigator.nextPage(DescribeItemsOnInvoicePage, mode, request.userAnswers),
+                updated => Future.successful(Redirect(navigator.nextPage(DescribeItemsOnInvoicePage, mode, updated)))
+              )
             )
           }
       )

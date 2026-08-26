@@ -18,6 +18,7 @@ package controllers
 
 import controllers.actions.*
 import models.{CheckMode, Mode, NormalMode}
+import pages.*
 
 import javax.inject.Inject
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -40,7 +41,7 @@ class SupplierTaxIdentifierWarningController @Inject() (
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
     // mark that the warning was shown and persist, then render the view
-    val flagged = request.userAnswers.set(pages.SupplierTaxIdentifierWarningShownPage, true)
+    val flagged = request.userAnswers.set(SupplierTaxIdentifierWarningShownPage, true)
     Future
       .fromTry(flagged)
       .flatMap(ua =>
@@ -61,7 +62,7 @@ class SupplierTaxIdentifierWarningController @Inject() (
 
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
     // clear the warning flag and continue
-    val cleared = request.userAnswers.remove(pages.SupplierTaxIdentifierWarningShownPage)
+    val cleared = request.userAnswers.remove(SupplierTaxIdentifierWarningShownPage)
     Future
       .fromTry(cleared)
       .flatMap(ua =>

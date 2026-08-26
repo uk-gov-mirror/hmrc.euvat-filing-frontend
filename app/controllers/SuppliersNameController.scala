@@ -18,8 +18,8 @@ package controllers
 
 import controllers.actions.*
 import forms.SuppliersNameFormProvider
-import models.{CheckMode, Mode}
 import models.requests.DataRequest
+import models.{CheckMode, Mode}
 import navigation.Navigator
 import pages.SuppliersNamePage
 import play.api.data.Form
@@ -50,71 +50,49 @@ class SuppliersNameController @Inject() (
 
   val form: Form[String] = formProvider()
 
-  /** Supplier name page.
-    *
-    * Behaviour notes:
-    *   - Pre-fills form from session when present.
-    *   - In CheckMode inside a purchase flow, unchanged submissions are short-circuited back to the Purchase CYA to prevent extra writes.
-    *   - When a change occurs the new value is persisted once and the user is redirected appropriately (CYA in CheckMode or navigator in NormalMode).
-    */
-
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
-    // Prepare the form value by reading the stored SuppliersName if present
-    val preparedForm = preparedFormFromAnswers(_.get(SuppliersNamePage), form)
-    // Render the page with OK and the invoice date as the back link
+    val preparedForm = form.preparedFromAnswers(SuppliersNamePage, request.userAnswers)
     renderOk(preparedForm, mode)
   }
 
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
-    // Bind the incoming form data and branch on validation result
     form
       .bindFromRequest()
       .fold(
-        // Invalid form: render BadRequest using shared helper
         formWithErrors => Future.successful(renderBadRequest(formWithErrors, mode)),
-
-        // Valid form: handle CheckMode short-circuiting and persistence
         value =>
-          // Determine if we're inside a purchase flow by presence of PurchaseType
           val inPurchaseFlow = request.userAnswers.get(pages.PurchaseTypePage).isDefined
 
-          // If in purchase flow, attempt short-circuit to avoid extra writes
           if (inPurchaseFlow) {
-            CheckModeShortCircuit.shortCircuitIfUnchanged(
-              pages.SuppliersNamePage,
-              value,
-              mode,
-              request.userAnswers,
-              controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()
-            ) match {
-              // Short-circuit produced a redirect; return it
-              case Some(res) => Future.successful(res)
-              // Otherwise persist once and redirect based on mode
-              case None =>
-                val userAnswersTry = request.userAnswers.set(SuppliersNamePage, value)
-                if (mode == CheckMode)
-                  persistAndThen(userAnswersTry, sessionRepository)(_ =>
-                    Future.successful(Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()))
-                  )
-                else
-                  persistAndThen(userAnswersTry, sessionRepository)(ua =>
-                    Future.successful(Redirect(navigator.nextPage(SuppliersNamePage, mode, ua)))
-                  )
+            if (mode == CheckMode && request.userAnswers.isAnswerUnchanged(pages.SuppliersNamePage, value)) {
+              Future.successful(Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad()))
+            } else {
+              val userAnswersTry = request.userAnswers.set(SuppliersNamePage, value)
+              if (mode == CheckMode)
+                for {
+                  updatedAnswers <- Future.fromTry(userAnswersTry)
+                  _              <- sessionRepository.set(updatedAnswers)
+                } yield Redirect(controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad())
+              else
+                for {
+                  updatedAnswers <- Future.fromTry(userAnswersTry)
+                  _              <- sessionRepository.set(updatedAnswers)
+                } yield Redirect(navigator.nextPage(SuppliersNamePage, mode, updatedAnswers))
             }
           } else {
-            // Not in purchase flow: persist and continue normal navigation
             val userAnswersTry = request.userAnswers.set(SuppliersNamePage, value)
-            persistAndThen(userAnswersTry, sessionRepository)(ua => Future.successful(Redirect(navigator.nextPage(SuppliersNamePage, mode, ua))))
+            for {
+              updatedAnswers <- Future.fromTry(userAnswersTry)
+              _              <- sessionRepository.set(updatedAnswers)
+            } yield Redirect(navigator.nextPage(SuppliersNamePage, mode, updatedAnswers))
           }
       )
   }
 
-  // Render OK view with supplied form and mode
   private def renderOk(preparedForm: Form[String], mode: Mode)(implicit request: DataRequest[?]) = Ok(
     view(preparedForm, mode, routes.InvoiceDateController.onPageLoad(mode))
   )
 
-  // Render BadRequest view for invalid forms
   private def renderBadRequest(formWithErrors: Form[String], mode: Mode)(implicit request: DataRequest[?]) = BadRequest(
     view(formWithErrors, mode, routes.InvoiceDateController.onPageLoad(mode))
   )

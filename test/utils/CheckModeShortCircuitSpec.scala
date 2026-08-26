@@ -17,50 +17,30 @@
 package utils
 
 import base.SpecBase
-import models.{CheckMode, NormalMode, UserAnswers}
+import models.{CheckMode, UserAnswers}
 import org.scalatestplus.mockito.MockitoSugar
-import org.mockito.Mockito.*
 import pages.TotalVatPaidPage
 import play.api.mvc.Results
-import repositories.SessionRepository
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CheckModeShortCircuitSpec extends SpecBase with MockitoSugar {
 
-  "CheckModeShortCircuit.shortCircuitIfUnchanged" - {
-    "must return Some(Redirect) when in CheckMode and value unchanged" in {
+  "UserAnswers.isAnswerUnchanged" - {
+    "must return true when the stored value is unchanged" in {
       val ua = emptyUserAnswers.set(TotalVatPaidPage, BigDecimal(12.34)).success.value
-      val res = CheckModeShortCircuit.shortCircuitIfUnchanged(TotalVatPaidPage,
-                                                              BigDecimal(12.34),
-                                                              CheckMode,
-                                                              ua,
-                                                              controllers.routes.JourneyRecoveryController.onPageLoad()
-                                                             )
-      res.isDefined mustBe true
+      ua.isAnswerUnchanged(TotalVatPaidPage, BigDecimal(12.34)) mustBe true
     }
 
-    "must return None when in CheckMode but value changed" in {
+    "must return false when the stored value changed" in {
       val ua = emptyUserAnswers.set(TotalVatPaidPage, BigDecimal(1)).success.value
-      val res = CheckModeShortCircuit.shortCircuitIfUnchanged(TotalVatPaidPage,
-                                                              BigDecimal(2),
-                                                              CheckMode,
-                                                              ua,
-                                                              controllers.routes.JourneyRecoveryController.onPageLoad()
-                                                             )
-      res mustBe None
+      ua.isAnswerUnchanged(TotalVatPaidPage, BigDecimal(2)) mustBe false
     }
 
-    "must return None when not in CheckMode" in {
+    "must return false when there is no stored value" in {
       val ua = emptyUserAnswers
-      val res = CheckModeShortCircuit.shortCircuitIfUnchanged(TotalVatPaidPage,
-                                                              BigDecimal(2),
-                                                              NormalMode,
-                                                              ua,
-                                                              controllers.routes.JourneyRecoveryController.onPageLoad()
-                                                             )
-      res mustBe None
+      ua.isAnswerUnchanged(TotalVatPaidPage, BigDecimal(2)) mustBe false
     }
   }
 
@@ -72,13 +52,16 @@ class CheckModeShortCircuitSpec extends SpecBase with MockitoSugar {
       var called = false
       val onSaved: UserAnswers => Future[play.api.mvc.Result] = (_: UserAnswers) => { called = true; Future.successful(Results.Ok) }
 
-      val f = CheckModeShortCircuit.applyNoPersist(TotalVatPaidPage,
-                                                   BigDecimal(5),
-                                                   CheckMode,
-                                                   ua,
-                                                   controllers.routes.JourneyRecoveryController.onPageLoad(),
-                                                   onSaved
-                                                  )
+      val f = CheckModeShortCircuit.applyNoPersist(
+        CheckModeShortCircuit.ShortCircuitNoPersistArgs(
+          TotalVatPaidPage,
+          BigDecimal(5),
+          CheckMode,
+          ua,
+          controllers.routes.JourneyRecoveryController.onPageLoad(),
+          onSaved
+        )
+      )
       whenReady(f) { r =>
         called mustBe true
         r.header.status mustBe 200
