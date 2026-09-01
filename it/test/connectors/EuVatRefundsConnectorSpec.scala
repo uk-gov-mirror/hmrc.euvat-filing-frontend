@@ -249,4 +249,62 @@ class EuVatRefundsConnectorSpec extends AnyWordSpec with Matchers with MockitoSu
       }
     }
   }
+
+  "EuVatRefundsConnector.updatePurchase" should {
+
+    val updateRequest = models.requests.UpdatePurchaseRequest(
+      applicationId = 123L,
+      itemNumber = 1,
+      goodsDescriptionCategory = "1.2",
+      goodsDescriptionSubCategory = None,
+      goodsDescriptionText = Some("Fuel"),
+      simplifiedInvoiceIndicator = Some("Y"),
+      supplierName = Some("Supplier"),
+      supplierAddress1 = None,
+      supplierAddress2 = None,
+      supplierAddress3 = None,
+      supplierVatRegNumber = None,
+      supplierTaxIdentifier = None,
+      invoiceDate = None,
+      invoiceNumber = None,
+      currencyCode = None,
+      taxableAmount = None,
+      vatAmount = None,
+      deductibleVatAmount = None,
+      updateSequenceNumber = 1
+    )
+
+    val expectedResponse = UpdatePurchaseResponse(updateSequenceNumber = 42)
+
+    "call the correct URL and return the expected response" in {
+      reset(mockHttp, mockRequestBuilder)
+
+      when(mockHttp.put(any())(any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.execute[UpdatePurchaseResponse](any(), any()))
+        .thenReturn(Future.successful(expectedResponse))
+
+      val result = connector.updatePurchase(updateRequest).futureValue
+
+      result shouldBe expectedResponse
+
+      verify(mockHttp).put(url"$baseUrl/update-purchase-details")
+      verify(mockRequestBuilder).execute[UpdatePurchaseResponse](any(), any())
+    }
+
+    "propagate failures from the HTTP client" in {
+      val failure = new RuntimeException("boom")
+
+      when(mockHttp.put(any())(any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.execute[UpdatePurchaseResponse](any(), any()))
+        .thenReturn(Future.failed(failure))
+
+      val result = connector.updatePurchase(updateRequest)
+
+      whenReady(result.failed) { ex =>
+        ex shouldBe failure
+      }
+    }
+  }
 }

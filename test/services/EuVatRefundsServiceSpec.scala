@@ -172,6 +172,51 @@ class EuVatRefundsServiceSpec extends SpecBase with MockitoSugar with ScalaFutur
     }
   }
 
+  "EuVatRefundsService.updatePurchase" - {
+
+    val updateRequest = models.requests.UpdatePurchaseRequest(
+      applicationId = 123L,
+      itemNumber = 1,
+      goodsDescriptionCategory = "1.2",
+      goodsDescriptionSubCategory = None,
+      goodsDescriptionText = Some("Fuel"),
+      simplifiedInvoiceIndicator = Some("Y"),
+      supplierName = Some("Supplier"),
+      supplierAddress1 = None,
+      supplierAddress2 = None,
+      supplierAddress3 = None,
+      supplierVatRegNumber = None,
+      supplierTaxIdentifier = None,
+      invoiceDate = None,
+      invoiceNumber = None,
+      currencyCode = None,
+      taxableAmount = None,
+      vatAmount = None,
+      deductibleVatAmount = None,
+      updateSequenceNumber = 1
+    )
+
+    val expectedResponse = models.responses.UpdatePurchaseResponse(updateSequenceNumber = 42)
+
+    "should return the update purchase response from the connector" in {
+      when(mockConnector.updatePurchase(any())(any()))
+        .thenReturn(Future.successful(expectedResponse))
+
+      service.updatePurchase(updateRequest)(hc).futureValue mustEqual expectedResponse
+    }
+
+    "should propagate an exception from the connector" in {
+      val failure = new RuntimeException("Connector failed")
+
+      when(mockConnector.updatePurchase(any())(any()))
+        .thenReturn(Future.failed(failure))
+
+      whenReady(service.updatePurchase(updateRequest).failed) { ex =>
+        ex mustEqual failure
+      }
+    }
+  }
+
   "EuVatRefundsService.getSupplierTaxIdentifierCount" - {
 
     val request = SupplierTaxIdentifierCountRequest(applicationId = 123L, itemNumber = 1, taxIdentifier = "TAX123", invoiceNumber = "INV1")
