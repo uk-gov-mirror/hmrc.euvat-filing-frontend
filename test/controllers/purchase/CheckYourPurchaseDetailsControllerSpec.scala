@@ -28,7 +28,7 @@ import play.api.inject.bind
 import java.time.LocalDateTime
 import java.time.LocalDate
 import play.api.Configuration
-import utils.ConfigCurrencyMapping
+import utils.{CurrencyConfig, Currency}
 import models.SupplierAddress
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -192,13 +192,9 @@ class CheckYourPurchaseDetailsControllerSpec extends SpecBase with MockitoSugar 
     }
 
     "onPageLoad should include currency row when currency selection required" in {
-      val fakeConfig = mock[ConfigCurrencyMapping]
-      when(fakeConfig.currenciesFor("BG")).thenReturn(Seq(("euro", "EUR", "€"), ("pound", "GBP", "£")))
-      when(fakeConfig.requiresCurrencySelection("BG")).thenReturn(true)
+      val ua = emptyUserAnswers.set(RefundingCountryPage, "EE").success.value
 
-      val ua = emptyUserAnswers.set(RefundingCountryPage, "BG").success.value
-
-      val application = applicationBuilder(userAnswers = Some(ua)).overrides(bind[ConfigCurrencyMapping].toInstance(fakeConfig)).build()
+      val application = applicationBuilder(userAnswers = Some(ua)).build()
 
       running(application) {
         implicit val app = application
@@ -208,18 +204,14 @@ class CheckYourPurchaseDetailsControllerSpec extends SpecBase with MockitoSugar 
         val msgs = messages(application)
 
         status(result) mustEqual OK
-        body must include(msgs("refundingCurrency.checkYourAnswersLabel"))
+        body must include("Currency")
       }
     }
 
     "onPageLoad should NOT include currency row when currency selection not required" in {
-      val fakeConfig = mock[ConfigCurrencyMapping]
-      when(fakeConfig.currenciesFor("BG")).thenReturn(Seq(("euro", "EUR", "€")))
-      when(fakeConfig.requiresCurrencySelection("BG")).thenReturn(false)
+      val ua = emptyUserAnswers.set(RefundingCountryPage, "AT").success.value
 
-      val ua = emptyUserAnswers.set(RefundingCountryPage, "BG").success.value
-
-      val application = applicationBuilder(userAnswers = Some(ua)).overrides(bind[ConfigCurrencyMapping].toInstance(fakeConfig)).build()
+      val application = applicationBuilder(userAnswers = Some(ua)).build()
 
       running(application) {
         val request = FakeRequest(GET, controllers.purchase.routes.CheckYourPurchaseDetailsController.onPageLoad().url)
@@ -228,7 +220,7 @@ class CheckYourPurchaseDetailsControllerSpec extends SpecBase with MockitoSugar 
         val msgs = messages(application)
 
         status(result) mustEqual OK
-        body must not include msgs("refundingCurrency.checkYourAnswersLabel")
+        body must not include ("Currency")
       }
     }
 

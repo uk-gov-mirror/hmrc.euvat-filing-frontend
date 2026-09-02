@@ -31,7 +31,7 @@ import viewmodels.checkAnswers.CheckYourPurchaseDetailsSummary
 import views.html.CheckYourPurchaseDetailsView
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class CheckYourPurchaseDetailsController @Inject() (
   override val messagesApi: MessagesApi,
