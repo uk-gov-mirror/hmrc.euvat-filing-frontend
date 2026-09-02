@@ -154,19 +154,12 @@ class RefundingCurrencyController @Inject() (
                     if (isChanged) ua.set(CurrencyChangedPage, true) else Success(ua)
                   }
 
-                  maybeCurrencyChangedTry match {
-                    case Success(finalAnswers) =>
-                      // Persist once and redirect: in CheckMode to the
-                      // Purchase CYA, otherwise follow the navigator.
-                      SaveAndRedirect.saveTryAndRedirect(
-                        Success(finalAnswers),
-                        sessionRepository,
-                        if (mode == models.CheckMode) purchaseCYA else navigator.nextPage(RefundingCurrencyPage, mode, finalAnswers)
-                      )
-                    case Failure(_) =>
-                      // Failure while composing UserAnswers -> 500
-                      Future.successful(InternalServerError("Failed to build UserAnswers"))
-                  }
+                  Future.fromTry(maybeCurrencyChangedTry)
+                  .flatMap: finalAnswers =>
+                    sessionRepository
+                      .set(finalAnswers)
+                      .map: _ =>
+                        Redirect(navigator.nextPage(RefundingCurrencyPage, mode, finalAnswers))
                 }
               )
             )
