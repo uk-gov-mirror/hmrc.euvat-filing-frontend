@@ -292,24 +292,6 @@ purchaseOrImport.purchase = Purchase
 purchaseOrImport.import = Import
 purchaseOrImport.error.required = Select an item you want to add to this claim
 
-import.caption = Import details
-
-importSubCode.fuel.title = What is the fuel used for?
-importSubCode.fuel.heading = What is the fuel used for?
-importSubCode.fuel.error.required = Select what the fuel is used for
-importSubCode.transport.title = What is the type of transport cost?
-importSubCode.transport.heading = What is the type of transport cost?
-importSubCode.transport.error.required = Select the type of transport cost
-importSubCode.foodAndDrink.title = What is the type of food, drink or restaurant cost?
-importSubCode.foodAndDrink.heading = What is the type of food, drink or restaurant cost?
-importSubCode.foodAndDrink.error.required = Select the type of food, drink or restaurant cost
-importSubCode.luxuries.title = What is the type of luxury, entertainment or hospitality cost?
-importSubCode.luxuries.heading = What is the type of luxury, entertainment or hospitality cost?
-importSubCode.luxuries.error.required = Select the type of luxury, entertainment or hospitality cost
-importSubCode.other.title = What other category best describes the item?
-importSubCode.other.heading = What other category best describes the item?
-importSubCode.other.error.required = Select the type of import
-
 invoiceType.title = Invoice type
 invoiceType.heading = Invoice type
 invoiceType.lead = You will need a valid VAT invoice or receipt. You cannot use statements, orders, letters, emails or other general correspondence to claim VAT.
