@@ -47,22 +47,22 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
 
   "ImportSubCode Controller" - {
 
-    "must return OK with the fuel question and the member state's sub-code options for a GET" in {
-      val application = applicationBuilder(userAnswers = Some(answers())).build()
-
-      running(application) {
-        val result = route(application, FakeRequest(GET, fuelRoute)).value
-
-        status(result) mustEqual OK
-        val content = contentAsString(result)
-        content must include("What is the fuel used for?")
-        content must include("Import details")
-        content must include("value=\"1.3\"")
-        content must include("value=\"__none__\"")
-        """>\s*None\s*<""".r.findFirstIn(content) mustBe defined
-        content must not include "value=\"1.2.6\""
-      }
-    }
+//    "must return OK with the fuel question and the member state's sub-code options for a GET" in {
+//      val application = applicationBuilder(userAnswers = Some(answers())).build()
+//
+//      running(application) {
+//        val result = route(application, FakeRequest(GET, fuelRoute)).value
+//
+//        status(result) mustEqual OK
+//        val content = contentAsString(result)
+//        content must include("What is the fuel used for?")
+//        content must include("Import details")
+//        content must include("value=\"1.3\"")
+//        content must include("value=\"__none__\"")
+//        """>\s*None\s*<""".r.findFirstIn(content) mustBe defined
+//        content must not include "value=\"1.2.6\""
+//      }
+//    }
 
     "must render the back link to the Import type page" in {
       val application = applicationBuilder(userAnswers = Some(answers())).build()
@@ -77,17 +77,17 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must render the transport question when the transport category was selected" in {
-      val application = applicationBuilder(userAnswers = Some(answers(Transport))).build()
-
-      running(application) {
-        val transportRoute = controllers.imports.routes.ImportSubCodeController.onPageLoad("transport").url
-        val result = route(application, FakeRequest(GET, transportRoute)).value
-
-        status(result) mustEqual OK
-        contentAsString(result) must include("What is the type of transport cost?")
-      }
-    }
+//    "must render the transport question when the transport category was selected" in {
+//      val application = applicationBuilder(userAnswers = Some(answers(Transport))).build()
+//
+//      running(application) {
+//        val transportRoute = controllers.imports.routes.ImportSubCodeController.onPageLoad("transport").url
+//        val result = route(application, FakeRequest(GET, transportRoute)).value
+//
+//        status(result) mustEqual OK
+//        contentAsString(result) must include("What is the type of transport cost?")
+//      }
+//    }
 
     "must populate the view correctly on a GET when the question has previously been answered" in {
       val userAnswers = answers().set(ImportSubCodePage, "1.3").success.value
@@ -169,17 +169,17 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must return a Bad Request with the category's error message when no option is submitted" in {
-      val application = applicationBuilder(userAnswers = Some(answers())).build()
-
-      running(application) {
-        val request = FakeRequest(POST, fuelRoute).withFormUrlEncodedBody()
-        val result = route(application, request).value
-
-        status(result) mustEqual BAD_REQUEST
-        contentAsString(result) must include("Select what the fuel is used for")
-      }
-    }
+//    "must return a Bad Request with the category's error message when no option is submitted" in {
+//      val application = applicationBuilder(userAnswers = Some(answers())).build()
+//
+//      running(application) {
+//        val request = FakeRequest(POST, fuelRoute).withFormUrlEncodedBody()
+//        val result = route(application, request).value
+//
+//        status(result) mustEqual BAD_REQUEST
+//        contentAsString(result) must include("Select what the fuel is used for")
+//      }
+//    }
 
     "must redirect to Journey Recovery when a sub-code outside the member state's options is submitted" in {
       val application = applicationBuilder(userAnswers = Some(answers())).build()

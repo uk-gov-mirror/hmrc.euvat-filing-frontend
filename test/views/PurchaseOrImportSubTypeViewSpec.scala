@@ -17,7 +17,7 @@
 package views
 
 import base.SpecBase
-import forms.purchase.PurchaseSubTypeFormProvider
+import forms.PurchaseOrImportSubTypeFormProvider
 import play.api.mvc.Call
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
@@ -26,7 +26,7 @@ import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
 
 class PurchaseOrImportSubTypeViewSpec extends SpecBase {
 
-  private val formProvider = new PurchaseSubTypeFormProvider()
+  private val formProvider = new PurchaseOrImportSubTypeFormProvider()
   private val form = formProvider("importSubCode.fuel.error.required")
 
   private val items = Seq(

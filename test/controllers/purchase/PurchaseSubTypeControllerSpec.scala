@@ -17,7 +17,7 @@
 package controllers.purchase
 
 import base.SpecBase
-import forms.purchase.PurchaseSubTypeFormProvider
+import forms.PurchaseOrImportSubTypeFormProvider
 import models.{Fuel, Other}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -35,7 +35,7 @@ import utils.ConfigPurchaseOrImportMapping
 
 class PurchaseSubTypeControllerSpec extends SpecBase with MockitoSugar {
   val onwardRoute: Call = Call("GET", "/foo")
-  val formProvider = new PurchaseSubTypeFormProvider()
+  val formProvider = new PurchaseOrImportSubTypeFormProvider()
   val form: Form[String] = formProvider()
 
   "PurchaseSubType Controller" - {

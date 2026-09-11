@@ -17,7 +17,7 @@
 package controllers.purchase
 
 import base.SpecBase
-import forms.purchase.PurchaseSubTypeFormProvider
+import forms.PurchaseOrImportSubTypeFormProvider
 import models.Fuel
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -32,7 +32,7 @@ import utils.ConfigPurchaseOrImportMapping
 
 class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
-  val formProvider = new PurchaseSubTypeFormProvider()
+  val formProvider = new PurchaseOrImportSubTypeFormProvider()
   val form: Form[String] = formProvider()
 
   "PurchaseSubCategory Controller" - {

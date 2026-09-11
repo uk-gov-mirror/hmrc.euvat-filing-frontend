@@ -15,8 +15,8 @@ POST        /food-drink-restaurant-cost                                  control
 GET         /luxury-entertainment-hospitality-cost                       controllers.imports.ImportSubCodeController.onPageLoad(importTypeKey: String = "luxuries")
 POST        /luxury-entertainment-hospitality-cost                       controllers.imports.ImportSubCodeController.onSubmit(importTypeKey: String = "luxuries")
 
-GET         /import/import-type-other                                           controllers.imports.ImportSubCodeController.onPageLoad(importTypeKey: String = "other")
-POST        /import/import-type-other                                           controllers.imports.ImportSubCodeController.onSubmit(importTypeKey: String = "other")
+GET         /import-type-other                                           controllers.imports.ImportSubCodeController.onPageLoad(importTypeKey: String = "other")
+POST        /import-type-other                                           controllers.imports.ImportSubCodeController.onSubmit(importTypeKey: String = "other")
 
 GET        /import/cost-for-publicity-purposes            controllers.imports.ImportSubCategoryController.onPageLoad(mode: Mode = NormalMode)
 POST       /import/cost-for-publicity-purposes            controllers.imports.ImportSubCategoryController.onSubmit(mode: Mode = NormalMode)

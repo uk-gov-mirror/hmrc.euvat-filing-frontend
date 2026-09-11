@@ -17,9 +17,9 @@
 package controllers.purchase
 
 import controllers.actions.*
-import forms.purchase.PurchaseSubTypeFormProvider
+import forms.PurchaseOrImportSubTypeFormProvider
 import models.requests.DataRequest
-import models.{CheckMode, Mode, NormalMode, PurchaseOrImportType, PurchaseOrImportSubCategoryType, UserAnswers}
+import models.{CheckMode, Mode, NormalMode, PurchaseOrImportSubCategoryType, PurchaseOrImportType, UserAnswers}
 import navigation.Navigator
 import pages.*
 import play.api.Logging
@@ -42,7 +42,7 @@ class PurchaseSubCategoryController @Inject() (
   identify: IdentifierAction,
   getData: DataRetrievalAction,
   requireData: DataRequiredAction,
-  formProvider: PurchaseSubTypeFormProvider,
+  formProvider: PurchaseOrImportSubTypeFormProvider,
   config: ConfigPurchaseOrImportMapping,
   val controllerComponents: MessagesControllerComponents,
   view: PurchaseOrImportSubTypeView

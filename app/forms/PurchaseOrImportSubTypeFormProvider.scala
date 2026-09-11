@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package forms.purchase
+package forms
 
 import play.api.data.Form
 import play.api.data.Forms.*
@@ -22,7 +22,7 @@ import play.api.data.validation.{Constraint, Invalid, Valid}
 
 import javax.inject.Inject
 
-class PurchaseSubTypeFormProvider @Inject() () {
+class PurchaseOrImportSubTypeFormProvider @Inject() () {
   private def nonEmptyOpt(requiredKey: String): Constraint[Option[String]] = Constraint {
     case Some(s) if s.trim.nonEmpty => Valid
     case _                          => Invalid(requiredKey)

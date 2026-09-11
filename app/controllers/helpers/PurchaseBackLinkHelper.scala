@@ -18,7 +18,7 @@ package controllers.helpers
 
 import controllers.purchase.routes
 import models.requests.DataRequest
-import models.{Mode, PurchaseOrImportType, PurchaseOrImportSubCategoryType}
+import models.{Mode, PurchaseOrImportSubCategoryType, PurchaseOrImportType}
 import models.PurchaseOrImportSubCategoryType.{defaultSlugFor, purchaseOrImportSubCategoryUrlSlugFor}
 import pages.{PurchaseSubCategoryPage, PurchaseSubTypePage, PurchaseTypePage}
 import play.api.mvc.Call

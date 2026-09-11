@@ -19,6 +19,8 @@ package controllers.imports
 import controllers.actions.*
 import forms.purchase.PurchaseSubTypeFormProvider
 import forms.imports.SadReferenceFormProvider
+import controllers.routes
+import forms.PurchaseOrImportSubTypeFormProvider
 import models.requests.DataRequest
 import models.{NormalMode, PurchaseOrImportType}
 import navigation.Navigator
@@ -42,7 +44,7 @@ class ImportSubCodeController @Inject() (
   identify: IdentifierAction,
   getData: DataRetrievalAction,
   requireData: DataRequiredAction,
-  formProvider: PurchaseSubTypeFormProvider,
+  formProvider: PurchaseOrImportSubTypeFormProvider,
   config: ConfigPurchaseOrImportMapping,
   sadFormProvider: SadReferenceFormProvider,
   sadView: views.html.imports.SadReferenceView,
