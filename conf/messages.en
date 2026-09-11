@@ -564,8 +564,6 @@ vatClaimWarning.warning = If you submit a claim with inaccurate information, it 
 vatClaimWarning.yes = Yes, this is correct
 vatClaimWarning.no = No, change the VAT claim amount
 
-import.caption = Import details
-
 singleAdministrativeDocumentReferenceNumberAvailable.title = Do you have a Single Administrative Document (SAD) reference number?
 singleAdministrativeDocumentReferenceNumberAvailable.heading = Do you have a Single Administrative Document (SAD) reference number?
 singleAdministrativeDocumentReferenceNumberAvailable.hint = You can usually find this at the top of the import document
