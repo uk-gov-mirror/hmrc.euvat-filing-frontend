@@ -19,7 +19,7 @@ package controllers.purchase
 import controllers.actions.*
 import forms.purchase.PurchaseSubTypeFormProvider
 import models.requests.DataRequest
-import models.{CheckMode, Mode, NormalMode, PurchaseOrImportType, PurchaseSubCategoryType, UserAnswers}
+import models.{CheckMode, Mode, NormalMode, PurchaseOrImportType, PurchaseOrImportSubCategoryType, UserAnswers}
 import navigation.Navigator
 import pages.*
 import play.api.Logging
@@ -94,7 +94,7 @@ class PurchaseSubCategoryController @Inject() (
 
   private def tryReverseParent(parentKey: String, candidate: String, mode: Mode)(implicit request: RequestHeader): Option[Call] = {
     try {
-      val slug = PurchaseSubCategoryType.pathFor(parentKey, candidate)
+      val slug = PurchaseOrImportSubCategoryType.pathFor(parentKey, candidate)
       val prefix = utils.MountPrefix.getFromRequest
       val url = ControllerHelpers.pathForSlug(slug, mode, prefix)
       Some(Call("POST", url))

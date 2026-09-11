@@ -297,7 +297,7 @@ class PurchaseSubTypeController @Inject() (
     candidates.iterator
       .map { c =>
         try {
-          val slug = PurchaseSubCategoryType.pathFor(parentKey, c)
+          val slug = PurchaseOrImportSubCategoryType.pathFor(parentKey, c)
           val prefix = MountPrefix.getFromRequest
           val path = ControllerHelpers.pathForSlug(slug, mode, prefix)
           Some(Call("GET", path))

@@ -18,8 +18,8 @@ package controllers.helpers
 
 import controllers.purchase.routes
 import models.requests.DataRequest
-import models.{Mode, PurchaseOrImportType, PurchaseSubCategoryType}
-import models.PurchaseSubCategoryType.{defaultSlugFor, purchaseSubCategoryUrlSlugFor}
+import models.{Mode, PurchaseOrImportType, PurchaseOrImportSubCategoryType}
+import models.PurchaseOrImportSubCategoryType.{defaultSlugFor, purchaseOrImportSubCategoryUrlSlugFor}
 import pages.{PurchaseSubCategoryPage, PurchaseSubTypePage, PurchaseTypePage}
 import play.api.mvc.Call
 import utils.MountPrefix
@@ -37,13 +37,13 @@ object PurchaseBackLinkHelper {
       case (Some(urlSlug), None, Some(child)) if child.contains(".") && purchaseType.isDefined =>
         val parentKey = purchaseType.get.toString
 
-        purchaseSubCategoryUrlSlugFor(parentKey, child)
-          .orElse(purchaseSubCategoryUrlSlugFor(parentKey, child.split("\\.").head))
+        purchaseOrImportSubCategoryUrlSlugFor(parentKey, child)
+          .orElse(purchaseOrImportSubCategoryUrlSlugFor(parentKey, child.split("\\.").head))
           .orElse(defaultSlugFor(parentKey))
           .map(urlSlug => Call("GET", s"${MountPrefix.getFromRequest}/$urlSlug"))
           .getOrElse(routes.PurchaseTypeController.onPageLoad(mode))
       case (Some(_), Some(parent), Some(_)) if purchaseType.isDefined =>
-        val slugPath = PurchaseSubCategoryType.pathFor(purchaseType.get.toString, parent)
+        val slugPath = PurchaseOrImportSubCategoryType.pathFor(purchaseType.get.toString, parent)
         Call("GET", s"${MountPrefix.getFromRequest}/$slugPath")
       case (Some(slug), Some(_), None) =>
         Call("GET", s"${MountPrefix.getFromRequest}/$slug")

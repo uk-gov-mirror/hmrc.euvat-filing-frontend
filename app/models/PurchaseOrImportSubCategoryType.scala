@@ -20,7 +20,7 @@ package models
   *
   * Provides a canonical URL slug for a given parent key and parent code so controllers and views can produce friendly paths and titles.
   */
-object PurchaseSubCategoryType {
+object PurchaseOrImportSubCategoryType {
 
   // Map of (parentKey -> (parentCode -> slug))
   private val mapping: Map[String, Map[String, String]] = Map(
@@ -56,7 +56,7 @@ object PurchaseSubCategoryType {
     )
   )
 
-  def purchaseSubCategoryUrlSlugFor(parentKey: String, parentCode: String): Option[String] =
+  def purchaseOrImportSubCategoryUrlSlugFor(parentKey: String, parentCode: String): Option[String] =
     mapping.get(parentKey).flatMap(_.get(parentCode))
 
   /** Returns the first available slug for a parent key, if any. Used as a sensible default when a specific parent code does not have an explicit
@@ -74,7 +74,7 @@ object PurchaseSubCategoryType {
     // child's mapping (e.g. "1.1" -> "fuel-type") and reuse that slug so
     // friendly routes like `/fuel-type` still work when the parent code is
     // the shorter form.
-    purchaseSubCategoryUrlSlugFor(parentKey, parentCode)
+    purchaseOrImportSubCategoryUrlSlugFor(parentKey, parentCode)
       .orElse(
         if (!parentCode.contains('.'))
           mapping.get(parentKey).flatMap(m => m.toSeq.filter { case (k, _) => k.startsWith(parentCode + ".") }.sortBy(_._1).headOption.map(_._2))

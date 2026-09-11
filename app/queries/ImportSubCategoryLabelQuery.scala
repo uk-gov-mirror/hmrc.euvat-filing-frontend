@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package models
+package queries
 
-import base.SpecBase
+import models.UserAnswers
+import play.api.libs.json.JsPath
 
-class PurchaseSubCategoryTypeSpec extends SpecBase {
+import scala.util.Success
 
-  "PurchaseSubCategoryType" - {
-    "slugFor should return configured slug when present" in {
-      PurchaseSubCategoryType.purchaseSubCategoryUrlSlugFor("fuel", "1.1") mustBe Some("fuel-type")
-    }
+case object ImportSubCategoryLabelQuery extends Gettable[String] with Settable[String] {
 
-    "pathFor should return configured slug when present" in {
-      PurchaseSubCategoryType.pathFor("fuel", "1.1") mustBe "fuel-type"
-    }
+  override def path: JsPath = JsPath \ "importSubCategoryLabel"
 
-    "pathFor should fall back to parentKey-parentCode when no mapping" in {
-      PurchaseSubCategoryType.pathFor("unknownKey", "2.4") mustBe "unknownKey-2-4"
-    }
-  }
+  override def cleanup(value: Option[String], userAnswers: UserAnswers) = Success(userAnswers)
 }
