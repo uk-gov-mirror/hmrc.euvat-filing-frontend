@@ -31,7 +31,7 @@
 
 @layout(pageTitle = title(form, messages("singleAdministrativeDocumentReferenceNumberAvailable.title")), backLinkUrl = Some(call.url)) {
 
-    @formHelper(action = controllers.imports.routes.SadReferenceController.onSubmit, Symbol("autoComplete") -> "off") {
+    @formHelper(action = controllers.imports.routes.SadReferenceController.onSubmit(models.NormalMode), Symbol("autoComplete") -> "off") {
 
         @mainErrorSummary(form, errorLinkOverrides = Map("value" -> "hasSadNumber"))
         

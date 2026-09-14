@@ -51,6 +51,13 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case PurchaseOrImportPage              => userAnswers => navigateFromPurchaseOrImportPage(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(NormalMode)(userAnswers)
     case ImportSubCodePage                 => userAnswers => navigateFromImportSubCodePage(NormalMode)(userAnswers)
+    case SadReferencePage                  => userAnswers =>
+      userAnswers.get(SadReferencePage) match {
+        case Some(true)  => importRoutes.SadReferenceNumberController.onPageLoad(NormalMode)
+        case Some(false) => controllers.routes.JourneyRecoveryController.onPageLoad()
+        case _           => controllers.routes.JourneyRecoveryController.onPageLoad()
+      }
+    case SadReferenceNumberPage            => _ => controllers.routes.JourneyRecoveryController.onPageLoad()
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(NormalMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(NormalMode, userAnswers)
     case DescribeItemsOnInvoicePage        => _ => purchaseRoutes.InvoiceTypeController.onPageLoad(NormalMode)
@@ -81,6 +88,13 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case CheckYourStateDetailsPage         => userAnswers => navigateFromCheckYourStateDetailsPage(CheckMode)(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(CheckMode)(userAnswers)
     case ImportSubCodePage                 => _ => importRoutes.SadReferenceController.onPageLoad
+    case SadReferencePage                  => userAnswers =>
+      userAnswers.get(SadReferencePage) match {
+        case Some(true)  => importRoutes.SadReferenceNumberController.onPageLoad(CheckMode)
+        case Some(false) => controllers.routes.JourneyRecoveryController.onPageLoad()
+        case _           => controllers.routes.JourneyRecoveryController.onPageLoad()
+      }
+    case SadReferenceNumberPage            => _ => controllers.routes.JourneyRecoveryController.onPageLoad()
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(CheckMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(CheckMode, userAnswers)
     case DescribeItemsOnInvoicePage        => _ => purchaseRoutes.CheckYourPurchaseDetailsController.onPageLoad()

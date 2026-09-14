@@ -571,3 +571,10 @@ singleAdministrativeDocumentReferenceNumberAvailable.heading = Do you have a Sin
 singleAdministrativeDocumentReferenceNumberAvailable.hint = You can usually find this at the top of the import document
 sadReference.error.required = Select yes if you have the Single Administrative Document (SAD) reference number
 singleAdministrativeDocumentReferenceNumberAvailable.error.required = Select yes if you have the Single Administrative Document (SAD) reference number
+
+sadReferenceNumber.title = What is your Single Administrative Document (SAD) reference number?
+sadReferenceNumber.heading = What is your Single Administrative Document (SAD) reference number?
+sadReferenceNumber.hint = Enter your SAD reference number in the correct format
+sadReferenceNumber.error.required = Enter your SAD reference number in the correct format
+sadReferenceNumber.error.invalid = Enter your SAD reference number in the correct format
+sadReferenceNumber.error.length = SAD reference number must be 18 characters or less
