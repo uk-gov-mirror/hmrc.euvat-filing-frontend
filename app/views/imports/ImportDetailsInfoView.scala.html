@@ -1,0 +1,50 @@
+@import viewmodels.InputWidth._
+
+@this(
+    layout: templates.Layout,
+    formHelper: FormWithCSRF,
+    govukErrorSummary: GovukErrorSummary,
+    govukInput: GovukInput,
+    govukButton: GovukButton
+)
+
+@(form: Form[_], mode: Mode, call: Call)(implicit request: Request[_], messages: Messages)
+
+@isError = @{form.error("value").isDefined}
+
+@layout(pageTitle = title(form, messages("importDetailsInfo.title")), backLinkUrl = Some(call.url)) {
+
+    @formHelper(action = routes.ImportDetailsInfoController.onSubmit(mode)) {
+
+        @mainErrorSummary(form, Map("value" -> "value"))
+
+        <div class="govuk-form-group @if(isError){govuk-form-group--error}">
+            <span class="govuk-caption-l">@messages("imports.caption")</span>
+
+            <h1 class="govuk-heading-l">@messages("importDetailsInfo.h1")</h1>
+
+            <p class="govuk-body">@messages("importDetailsInfo.p1") </p>
+
+            <ul>
+                <li>@messages("importDetailsInfo.bullet1")</li>
+                <li>@messages("importDetailsInfo.bullet2")</li>
+            </ul>
+
+            @govukCharacterCount(CharacterCount(
+                id = "value",
+                name = "value",
+                maxLength = Some(255),
+                label = Label(
+                    content = Text(messages("describeItemsOnInvoice.label"))
+                ),
+                value = form("value").value,
+                errorMessage = form("value").error.map(err => ErrorMessage(content = Text(messages(err.message, err.args*))))
+
+            ))
+        </div>
+
+        @govukButton(
+            ButtonViewModel(messages("site.continue"))
+        )
+    }
+}

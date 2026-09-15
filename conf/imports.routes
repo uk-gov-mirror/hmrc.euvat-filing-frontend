@@ -17,3 +17,7 @@ POST        /import-type-other                                           control
 GET         /single-administrative-document-reference-number-available    controllers.imports.SadReferenceController.onPageLoad
 POST        /single-administrative-document-reference-number-available    controllers.imports.SadReferenceController.onSubmit
 
+GET         import/import-document-details                   controllers.imports.ImportDetailsInfoController.onPageLoad(mode: Mode = NormalMode)
+POST        import/import-document-details                   controllers.imports.ImportDetailsInfoController.onSubmit(mode: Mode = NormalMode)
+GET         /change/import/import-document-details           controllers.imports.ImportDetailsInfoController.onPageLoad(mode: Mode = CheckMode)
+POST        /change/import/import-document-details           controllers.imports.ImportDetailsInfoController.onSubmit(mode: Mode = CheckMode)
