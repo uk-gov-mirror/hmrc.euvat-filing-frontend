@@ -46,7 +46,7 @@ object ConfigPurchaseOrImportMapping {
 
 class ConfigPurchaseOrImportMapping @Inject() (config: Configuration = Configuration.empty, env: Environment = Environment.simple()) {
 
-  val prefix = "purchase.sub."
+  val prefix = "sub."
 
   private def normalizeLabel(label: String, code: String): String = {
     if !label.startsWith(prefix) || code.isEmpty then label
@@ -59,7 +59,7 @@ class ConfigPurchaseOrImportMapping @Inject() (config: Configuration = Configura
 
   private val mapping: Map[String, Seq[PurchaseNode]] =
     try {
-      val rootConfig = config.underlying.getConfig("purchase.mapping")
+      val rootConfig = config.underlying.getConfig("purchase-or-import-mapping")
 
       def parseEntry(entry: Any): PurchaseNode = entry match {
         case s: String =>
@@ -152,7 +152,7 @@ class ConfigPurchaseOrImportMapping @Inject() (config: Configuration = Configura
             val derivedLabel = explicitLabelOpt.orElse {
               nodesForParent.find(n => n.code.startsWith(base + ".")).flatMap { child =>
                 val l = child.label
-                if (l.startsWith("purchase.sub.")) {
+                if (l.startsWith("sub.")) {
                   val parts = l.split("\\.")
                   if (parts.length > 3) Some(parts.dropRight(1).mkString(".")) else None
                 } else None
@@ -241,7 +241,7 @@ class ConfigPurchaseOrImportMapping @Inject() (config: Configuration = Configura
       val lang = Option(msgs.lang.code).getOrElse("en")
 
       def loadPurchaseMessages(langCode: String): Map[String, String] = {
-        val fileName: String = s"messages.purchase.$langCode"
+        val fileName: String = s"messages.purchaseOrImport.$langCode"
 
         try {
           env

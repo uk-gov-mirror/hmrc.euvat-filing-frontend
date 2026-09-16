@@ -36,7 +36,7 @@ class MergedMessagesApiProviderSpec extends AnyFreeSpec with Matchers {
       val defaultApi = api.asInstanceOf[DefaultMessagesApi]
       // ensure some well-known keys are present in the merged map
       defaultApi.messages.get("en").flatMap(_.get("service.name")) mustBe Some("EU VAT")
-      defaultApi.messages.get("en").flatMap(_.get("purchase.sub.fuel.heading")).isDefined mustBe true
+      defaultApi.messages.get("en").flatMap(_.get("sub.fuel.heading")).isDefined mustBe true
     }
   }
 }

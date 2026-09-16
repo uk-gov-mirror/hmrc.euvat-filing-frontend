@@ -74,7 +74,7 @@ class PurchaseSubTypeController @Inject() (
     val items = if (parentKey == "other") rawItems.filterNot(_.value.contains(ConfigPurchaseOrImportMapping.NoneValue)) else rawItems
     val parentHeading = parentHeadingFor(parentKey)
     val msgs = messagesApi.preferred(request)
-    val requiredKeyCandidates = Seq(s"purchase.sub.$parentKey.error.required")
+    val requiredKeyCandidates = Seq(s"sub.$parentKey.error.required")
     val requiredKey = requiredKeyCandidates.find(k => msgs.isDefinedAt(k)).getOrElse("error.required")
     val preparedForm = userAnswers.get(PurchaseSubTypePage).fold(formProvider(requiredKey))(formProvider(requiredKey).fill)
     val resolvedSlug = resolvedSlugFor(parentKey, purchaseTypeSlug)
@@ -141,11 +141,11 @@ class PurchaseSubTypeController @Inject() (
 
   private def parentHeadingFor(parentKey: String)(implicit request: RequestHeader): String =
     parentKey match {
-      case "fuel"         => messagesApi.preferred(request)("purchase.sub.fuel.heading")
-      case "transport"    => messagesApi.preferred(request)("purchase.sub.transport.heading")
-      case "foodAndDrink" => messagesApi.preferred(request)("purchase.sub.foodAndDrink.heading")
-      case "luxuries"     => messagesApi.preferred(request)("purchase.sub.luxuries.heading")
-      case "other"        => messagesApi.preferred(request)("purchase.sub.other.heading")
+      case "fuel"         => messagesApi.preferred(request)("sub.fuel.heading")
+      case "transport"    => messagesApi.preferred(request)("sub.transport.heading")
+      case "foodAndDrink" => messagesApi.preferred(request)("sub.foodAndDrink.heading")
+      case "luxuries"     => messagesApi.preferred(request)("sub.luxuries.heading")
+      case "other"        => messagesApi.preferred(request)("sub.other.heading")
       case _              => parentKey
     }
 

@@ -51,7 +51,7 @@ class MergedMessagesApiProvider @Inject() (
   private def loadMergedMessages(): Map[String, Map[String, String]] = {
     val langsToLoad = Seq("en", "cy")
     // candidate files to read in order of precedence
-    def filesFor(lang: String) = Seq("messages", s"messages.$lang", s"messages.purchase.$lang")
+    def filesFor(lang: String) = Seq("messages", s"messages.$lang", s"messages.purchaseOrImport.$lang")
 
     langsToLoad.map { lang =>
       val entries = filesFor(lang).flatMap(readEntries)

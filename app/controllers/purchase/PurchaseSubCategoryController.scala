@@ -83,12 +83,12 @@ class PurchaseSubCategoryController @Inject() (
   }
 
   private def parentDerivedTitle(parentKey: String, resolvedParentCode: String, msgs: Messages): Option[String] = {
-    val asIs = s"purchase.sub.$parentKey.$resolvedParentCode.title"
+    val asIs = s"sub.$parentKey.$resolvedParentCode.title"
     val dropLeading = {
       val parts = resolvedParentCode.split("\\.")
-      if (parts.length > 1) s"purchase.sub.$parentKey.${parts.drop(1).mkString(".")}.title" else asIs
+      if (parts.length > 1) s"sub.$parentKey.${parts.drop(1).mkString(".")}.title" else asIs
     }
-    val lastSeg = resolvedParentCode.split("\\.").lastOption.map(s => s"purchase.sub.$parentKey.$s.title").getOrElse(asIs)
+    val lastSeg = resolvedParentCode.split("\\.").lastOption.map(s => s"sub.$parentKey.$s.title").getOrElse(asIs)
     Seq(asIs, dropLeading, lastSeg).collectFirst { case k if msgs.isDefinedAt(k) => msgs(k) }
   }
 
@@ -138,24 +138,24 @@ class PurchaseSubCategoryController @Inject() (
     val headSeg = resolvedParentCode.split("\\.").headOption.getOrElse(resolvedParentCode)
 
     val specificTitleKeys = Seq(
-      s"purchase.sub.$parentKey.$lastSeg.title",
-      s"purchase.sub.$parentKey.$resolvedParentCode.title",
-      s"purchase.sub.$parentKey.$headSeg.title"
+      s"sub.$parentKey.$lastSeg.title",
+      s"sub.$parentKey.$resolvedParentCode.title",
+      s"sub.$parentKey.$headSeg.title"
     )
 
     val childTitleOpt = specificTitleKeys
       .collectFirst { case k if msgs.isDefinedAt(k) => msgs(k) }
       .orElse(options.to(LazyList).flatMap { case (_, labelKey) => titleForLabelKey(labelKey, msgs) }.headOption)
 
-    val parentHeading = msgs(s"purchase.sub.$parentKey.heading")
+    val parentHeading = msgs(s"sub.$parentKey.heading")
     childTitleOpt.orElse(parentDerivedTitle(parentKey, resolvedParentCode, msgs)).getOrElse(parentHeading)
   }
 
   private def requiredKeyFor(parentKey: String, resolvedParentCode: String, msgs: Messages): String = {
     val lastSeg = resolvedParentCode.split("\\.").lastOption.getOrElse(resolvedParentCode)
     val candidateKeys = Seq(
-      s"purchase.sub.$parentKey.$lastSeg.error.required",
-      s"purchase.sub.$parentKey.error.required"
+      s"sub.$parentKey.$lastSeg.error.required",
+      s"sub.$parentKey.error.required"
     )
     candidateKeys.find(k => msgs.isDefinedAt(k)).getOrElse("error.required")
   }

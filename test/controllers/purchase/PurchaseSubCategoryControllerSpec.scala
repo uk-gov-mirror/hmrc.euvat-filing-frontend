@@ -39,8 +39,8 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must return OK when subcategories exist" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.test.1.1"))
-        override def subcodesFor(country: String, parentKey: String) = Seq(("1.1", "purchase.sub.test.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.test.1.1"))
+        override def subcodesFor(country: String, parentKey: String) = Seq(("1.1", "sub.test.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -61,7 +61,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must render form action with change- prefix in CheckMode" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.test.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.test.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -84,7 +84,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must clear stored subcategory and label when CountryChangedPage is true" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.test.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.test.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -155,7 +155,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must save selection and redirect to InvoiceType on submit" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -191,7 +191,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must short-circuit to purchase CYA in CheckMode when value unchanged" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -223,7 +223,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must persist and redirect to CYA in CheckMode when value changed" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -264,7 +264,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must remove subcategory and redirect to InvoiceType when None selected" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -308,8 +308,8 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must persist parent PurchaseSubTypePage when arriving for the first time" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
-        override def subcodesFor(country: String, parentKey: String) = Seq(("1", "purchase.sub.fuel.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
+        override def subcodesFor(country: String, parentKey: String) = Seq(("1", "sub.fuel.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -343,8 +343,8 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
     "must work when RefundingCountryNamePage is 'Austria,AT' and persist child selection" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
         override def subcategoriesFor(country: String, parentKey: String, subcode: String) =
-          if (subcode == "1.1") Seq(("1.1.4", "purchase.sub.fuel.1.1.4")) else Seq.empty
-        override def subcodesFor(country: String, parentKey: String) = Seq(("1.1", "purchase.sub.fuel.1"))
+          if (subcode == "1.1") Seq(("1.1.4", "sub.fuel.1.1.4")) else Seq.empty
+        override def subcodesFor(country: String, parentKey: String) = Seq(("1.1", "sub.fuel.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -388,8 +388,8 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must not persist parent when it's already present" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
-        override def subcodesFor(country: String, parentKey: String) = Seq(("1", "purchase.sub.fuel.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
+        override def subcodesFor(country: String, parentKey: String) = Seq(("1", "sub.fuel.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -426,7 +426,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
     "must return a Bad Request and errors when invalid data is submitted" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.fuel.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.fuel.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -445,13 +445,13 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
         status(result) mustEqual BAD_REQUEST
         contentAsString(result) must include("There is a problem")
-        contentAsString(result) must include(messages(application)("purchase.sub.fuel.error.required"))
+        contentAsString(result) must include(messages(application)("sub.fuel.error.required"))
       }
     }
 
     "must display inline error message above radio buttons when no radio button is selected" in {
       val fakeConfig = new ConfigPurchaseOrImportMapping() {
-        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "purchase.sub.test.1.1"))
+        override def subcategoriesFor(country: String, parentKey: String, subcode: String) = Seq(("1.1", "sub.test.1.1"))
         override def buildRadioItems(options: Seq[(String, String)], msgs: play.api.i18n.Messages) = Seq.empty
       }
 
@@ -470,7 +470,7 @@ class PurchaseSubCategoryControllerSpec extends SpecBase with MockitoSugar {
 
         status(result) mustEqual BAD_REQUEST
         contentAsString(result) must include("There is a problem")
-        contentAsString(result) must include(messages(application)("purchase.sub.fuel.error.required"))
+        contentAsString(result) must include(messages(application)("sub.fuel.error.required"))
       }
     }
 

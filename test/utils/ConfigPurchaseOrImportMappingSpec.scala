@@ -26,13 +26,13 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
   "ConfigPurchaseOrImportMapping parsing and helpers" should {
     "parse simple HOCON mapping and expose subcodes and subcategories" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  AT = [
-        |    "fuel|1|purchase.sub.fuel.1",
-        |    "fuel|1.1|purchase.sub.fuel.1.1",
-        |    "fuel|10|purchase.sub.fuel.10",
-        |    "foodAndDrink|1|purchase.sub.foodAndDrink.1",
-        |    "foodAndDrink|1.1|purchase.sub.foodAndDrink.1.1"
+        |    "fuel|1|sub.fuel.1",
+        |    "fuel|1.1|sub.fuel.1.1",
+        |    "fuel|10|sub.fuel.10",
+        |    "foodAndDrink|1|sub.foodAndDrink.1",
+        |    "foodAndDrink|1.1|sub.foodAndDrink.1.1"
         |  ]
         |}
       """.stripMargin
@@ -43,7 +43,7 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
       val fuelCodes = svc.subcodesFor("AT", "fuel").map(_._1)
       fuelCodes should contain allElementsOf Seq("1", "1.1", "10")
 
-      svc.subcategoriesFor("AT", "fuel", "1") should contain("1.1" -> "purchase.sub.fuel.1.1")
+      svc.subcategoriesFor("AT", "fuel", "1") should contain("1.1" -> "sub.fuel.1.1")
 
       val foodCodes = svc.subcodesFor("foodAndDrink").map(_._1)
       foodCodes should contain allElementsOf Seq("1", "1.1")
@@ -62,8 +62,8 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
     "ignore non-string/object list entries and not throw" in {
       val confString = """
-        |purchase.mapping = {
-        |  IT = [ 123, true, "fuel|1|purchase.sub.fuel.1" ]
+        |purchase-or-import-mapping = {
+        |  IT = [ 123, true, "fuel|1|sub.fuel.1" ]
         |}
       """.stripMargin
 
@@ -76,10 +76,10 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
     "ignore non-string/object entries in HOCON arrays" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  GB = [
-        |    "fuel|1|purchase.sub.fuel.1",
-        |    { parent: "fuel", code: "1.1", label: "purchase.sub.fuel.1.1" },
+        |    "fuel|1|sub.fuel.1",
+        |    { parent: "fuel", code: "1.1", label: "sub.fuel.1.1" },
         |    123
         |  ]
         |}
@@ -94,11 +94,11 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
     "handle mixed-depth codes when deriving children" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  IE = [
-        |    "fuel|1|purchase.sub.fuel.1",
-        |    "fuel|1.1|purchase.sub.fuel.1.1",
-        |    "fuel|1.10.1|purchase.sub.fuel.1.10.1"
+        |    "fuel|1|sub.fuel.1",
+        |    "fuel|1.1|sub.fuel.1.1",
+        |    "fuel|1.10.1|sub.fuel.1.10.1"
         |  ]
         |}
       """.stripMargin
@@ -116,9 +116,9 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
     "parse mixed nested subcodes arrays (strings + objects) and expose children" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  DE = [
-        |    { parent: "fuel", code: "1", label: "purchase.sub.fuel.1", subcodes: [ "fuel|1.1|purchase.sub.fuel.1.1", { parent: "fuel", code: "1.2", label: "purchase.sub.fuel.1.2" } ] }
+        |    { parent: "fuel", code: "1", label: "sub.fuel.1", subcodes: [ "fuel|1.1|sub.fuel.1.1", { parent: "fuel", code: "1.2", label: "sub.fuel.1.2" } ] }
         |  ]
         |}
       """.stripMargin
@@ -135,9 +135,9 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
     "subcodesFor without country returns aggregated results" in {
       val confString = """
-        |purchase.mapping = {
-        |  AT = [ "fuel|1|purchase.sub.fuel.1" ]
-        |  DE = [ "fuel|1|purchase.sub.fuel.1" ]
+        |purchase-or-import-mapping = {
+        |  AT = [ "fuel|1|sub.fuel.1" ]
+        |  DE = [ "fuel|1|sub.fuel.1" ]
       |}
       """.stripMargin
 
@@ -160,12 +160,12 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
       val svc = new ConfigPurchaseOrImportMapping()
 
-      val options = Seq(("1.10.1", "purchase.sub.fuel.1.10.1"))
+      val options = Seq(("1.10.1", "sub.fuel.1.10.1"))
 
       val items = svc.buildRadioItems(options, msgs)
 
       // compare rendered content string to avoid depending on viewmodel internals
-      assert(items.head.content.toString.contains(msgs("purchase.sub.fuel.10.1")))
+      assert(items.head.content.toString.contains(msgs("sub.fuel.10.1")))
     }
 
     "fall back to the provided label string when no message keys match" in {
@@ -196,12 +196,12 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
       val svc = new ConfigPurchaseOrImportMapping()
 
       // labelKey contains an extra numeric segment that should be removed by normalizeLabel
-      val options = Seq(("1.10.1", "purchase.sub.fuel.1.10.1"))
+      val options = Seq(("1.10.1", "sub.fuel.1.10.1"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      // message file contains purchase.sub.fuel.10.1, so normalization should resolve to that
-      assert(items.head.content.toString.contains(msgs("purchase.sub.fuel.10.1")))
+      // message file contains sub.fuel.10.1, so normalization should resolve to that
+      assert(items.head.content.toString.contains(msgs("sub.fuel.10.1")))
     }
 
     "prefer exact message key when present" in {
@@ -214,11 +214,11 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
       val svc = new ConfigPurchaseOrImportMapping()
 
-      val options = Seq(("1.1", "purchase.sub.fuel.1.1"))
+      val options = Seq(("1.1", "sub.fuel.1.1"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      assert(items.head.content.toString.contains(msgs("purchase.sub.fuel.1.1")))
+      assert(items.head.content.toString.contains(msgs("sub.fuel.1.1")))
     }
 
     "normalize dotted numeric segments when resolving message keys" in {
@@ -231,12 +231,12 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
       val svc = new ConfigPurchaseOrImportMapping()
 
-      val options = Seq(("1.10.5", "purchase.sub.fuel.1.10.5"))
+      val options = Seq(("1.10.5", "sub.fuel.1.10.5"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      // should resolve to the stripped form purchase.sub.fuel.10.5
-      items.head.content.toString should include(msgs("purchase.sub.fuel.10.5"))
+      // should resolve to the stripped form sub.fuel.10.5
+      items.head.content.toString should include(msgs("sub.fuel.10.5"))
     }
 
     "strip leading numeric segment when resolving message keys" in {
@@ -249,11 +249,11 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
       val svc = new ConfigPurchaseOrImportMapping()
 
-      val options = Seq(("1.10.1", "purchase.sub.fuel.1.10.1"))
+      val options = Seq(("1.10.1", "sub.fuel.10.1"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      items.head.content.toString should include(msgs("purchase.sub.fuel.10.1"))
+      items.head.content.toString should include(msgs("sub.fuel.10.1"))
     }
 
     "prefer fallback label when normalizeLabelKey does not alter a short key" in {
@@ -267,12 +267,12 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
       val svc = new ConfigPurchaseOrImportMapping()
 
       // labelKey without extra numeric segments; none of the normalization helpers will change it
-      val options = Seq(("X", "purchase.sub.simple.key"))
+      val options = Seq(("X", "sub.simple.key"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      // no message key exists for purchase.sub.simple.key in messages, so fallback to provided label string
-      items.head.content.toString should include("purchase.sub.simple.key")
+      // no message key exists for sub.simple.key in messages, so fallback to provided label string
+      items.head.content.toString should include("sub.simple.key")
     }
 
     "prefer exact message key when present (candidate 1)" in {
@@ -285,12 +285,12 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
       val svc = new ConfigPurchaseOrImportMapping()
 
-      // exact key exists in messages: purchase.sub.fuel.10.5
-      val options = Seq(("1.10.5", "purchase.sub.fuel.10.5"))
+      // exact key exists in messages: sub.fuel.10.5
+      val options = Seq(("1.10.5", "sub.fuel.10.5"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      items.head.content.toString should include(msgs("purchase.sub.fuel.10.5"))
+      items.head.content.toString should include(msgs("sub.fuel.10.5"))
     }
 
     "resolve via normalizeLabelKey when normalizeLabel fails (candidate 3)" in {
@@ -305,19 +305,19 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
 
       // labelKey has a numeric second segment that doesn't match the code first segment
       // normalizeLabel will not change it, but normalizeLabelKey should strip the numeric segment
-      val options = Seq(("1.10.5", "purchase.sub.fuel.2.10.5"))
+      val options = Seq(("1.10.5", "sub.fuel.2.10.5"))
 
       val items = svc.buildRadioItems(options, msgs)
 
-      items.head.content.toString should include(msgs("purchase.sub.fuel.10.5"))
+      items.head.content.toString should include(msgs("sub.fuel.10.5"))
     }
 
     "parse configuration entries provided as strings (covered)" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  FR = [
-        |    "fuel|2|purchase.sub.fuel.2",
-        |    "fuel|2.1|purchase.sub.fuel.2.1"
+        |    "fuel|2|sub.fuel.2",
+        |    "fuel|2.1|sub.fuel.2.1"
         |  ]
         |}
       """.stripMargin
@@ -329,14 +329,14 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
       subs should contain("2")
 
       val children = svc.subcategoriesFor("FR", "fuel", "2")
-      children should contain(("2.1", "purchase.sub.fuel.2.1"))
+      children should contain(("2.1", "sub.fuel.2.1"))
     }
 
     "parse configuration entries provided as nested objects with subcodes (covered)" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  DE = [
-        |    { parent: "fuel", code: "1", label: "purchase.sub.fuel.1", subcodes: [ { parent: "fuel", code: "1.1", label: "purchase.sub.fuel.1.1" } ] }
+        |    { parent: "fuel", code: "1", label: "sub.fuel.1", subcodes: [ { parent: "fuel", code: "1.1", label: "sub.fuel.1.1" } ] }
         |  ]
         |}
       """.stripMargin
@@ -348,15 +348,15 @@ class ConfigPurchaseOrImportMappingSpec extends AnyWordSpec with Matchers {
       subs should contain("1")
 
       val children = svc.subcategoriesFor("DE", "fuel", "1")
-      children should contain(("1.1", "purchase.sub.fuel.1.1"))
+      children should contain(("1.1", "sub.fuel.1.1"))
     }
 
     "return subcodes for parentKey without country (covered)" in {
       val confString = """
-        |purchase.mapping = {
+        |purchase-or-import-mapping = {
         |  ES = [
-        |    "fuel|3|purchase.sub.fuel.3",
-        |    "fuel|3.1|purchase.sub.fuel.3.1"
+        |    "fuel|3|sub.fuel.3",
+        |    "fuel|3.1|sub.fuel.3.1"
         |  ]
 }
       """.stripMargin
