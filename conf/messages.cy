@@ -569,3 +569,12 @@ singleAdministrativeDocumentReferenceNumberAvailable.heading = Do you have a Sin
 singleAdministrativeDocumentReferenceNumberAvailable.hint = You can usually find this at the top of the import document
 sadReference.error.required = Select yes if you have the Single Administrative Document (SAD) reference number
 singleAdministrativeDocumentReferenceNumberAvailable.error.required = Select yes if you have the Single Administrative Document (SAD) reference number
+
+importDetailsInfo.title = Import document information
+importDetailsInfo.heading = Import document information
+importDetailsInfo.p1 = You must provide the:
+importDetailsInfo.bullet1 = port of import
+importDetailsInfo.bullet2 = document reference number
+importDetailsInfo.label = Enter import document details
+importDetailsInfo.error.required = Enter import document details
+importDetailsInfo.error.length = Import document details must be 255 characters or less
