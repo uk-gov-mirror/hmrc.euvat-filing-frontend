@@ -575,6 +575,6 @@ singleAdministrativeDocumentReferenceNumberAvailable.error.required = Select yes
 sadReferenceNumber.title = What is your Single Administrative Document (SAD) reference number?
 sadReferenceNumber.heading = What is your Single Administrative Document (SAD) reference number?
 sadReferenceNumber.hint = Enter your SAD reference number in the correct format
-sadReferenceNumber.error.required = Enter your SAD reference number in the correct format
+sadReferenceNumber.error.required = Enter your SAD reference number
 sadReferenceNumber.error.invalid = Enter your SAD reference number in the correct format
 sadReferenceNumber.error.length = SAD reference number must be 18 characters or less
