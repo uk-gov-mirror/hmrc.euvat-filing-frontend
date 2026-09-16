@@ -35,7 +35,7 @@ object ImportDetailsInfoSummary  {
           key     = "importDetailsInfo.checkYourAnswersLabel",
           value   = ValueViewModel(HtmlFormat.escape(answer).toString),
           actions = Seq(
-            ActionItemViewModel("site.change", routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
+            ActionItemViewModel("site.change", controllers.imports.routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
               .withVisuallyHiddenText(messages("importDetailsInfo.change.hidden"))
           )
         )

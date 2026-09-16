@@ -16,8 +16,9 @@
 
 package controllers.imports
 
-import controllers.actions._
+import controllers.actions.*
 import forms.ImportDetailsInfoFormProvider
+import models.requests.DataRequest
 import javax.inject.Inject
 import models.Mode
 import navigation.Navigator
@@ -27,6 +28,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.SessionRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 import views.html.imports.ImportDetailsInfoView
+import play.api.data.Form
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,7 +44,9 @@ class ImportDetailsInfoController @Inject()(
                                         view: ImportDetailsInfoView
                                     )(implicit ec: ExecutionContext) extends FrontendBaseController with I18nSupport {
 
-  val form = formProvider()
+  val form: Form[String] = formProvider()
+
+  private def backLink(mode: Mode)(implicit request: DataRequest[?]) = controllers.routes.JourneyRecoveryController.onPageLoad() //TODO: replace with SadReferenceController
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) {
     implicit request =>
@@ -52,7 +56,7 @@ class ImportDetailsInfoController @Inject()(
         case Some(value) => form.fill(value)
       }
 
-      Ok(view(preparedForm, mode))
+      Ok(view(preparedForm, mode, backLink(mode)))
   }
 
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async {
@@ -60,7 +64,7 @@ class ImportDetailsInfoController @Inject()(
 
       form.bindFromRequest().fold(
         formWithErrors =>
-          Future.successful(BadRequest(view(formWithErrors, mode))),
+          Future.successful(BadRequest(view(formWithErrors, mode, backLink(mode)))),
 
         value =>
           for {

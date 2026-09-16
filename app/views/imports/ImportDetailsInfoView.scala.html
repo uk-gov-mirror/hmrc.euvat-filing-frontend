@@ -15,13 +15,17 @@
  *@
 
 @import viewmodels.InputWidth._
+@import uk.gov.hmrc.govukfrontend.views.html.components.CharacterCount
+@import controllers.imports.routes
 
 @this(
     layout: templates.Layout,
     formHelper: FormWithCSRF,
     govukErrorSummary: GovukErrorSummary,
     govukInput: GovukInput,
-    govukButton: GovukButton
+    govukButton: GovukButton,
+    govukCharacterCount: GovukCharacterCount,
+    mainErrorSummary: views.html.components.MainErrorSummary
 )
 
 @(form: Form[_], mode: Mode, call: Call)(implicit request: Request[_], messages: Messages)

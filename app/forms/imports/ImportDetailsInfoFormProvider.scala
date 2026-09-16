@@ -16,6 +16,7 @@
 
 package forms
 
+import forms.ImportDetailsInfoFormProvider
 import javax.inject.Inject
 
 import forms.mappings.Mappings
