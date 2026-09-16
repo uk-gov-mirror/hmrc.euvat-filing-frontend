@@ -51,6 +51,7 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case PurchaseOrImportPage              => userAnswers => navigateFromPurchaseOrImportPage(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(NormalMode)(userAnswers)
     case ImportSubCodePage                 => userAnswers => navigateFromImportSubCodePage(NormalMode)(userAnswers)
+    case ImportDetailsInfoPage             => userAnswers => navigateFromImportDetailsInfoPage(NormalMode)(userAnswers)
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(NormalMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(NormalMode, userAnswers)
     case DescribeItemsOnInvoicePage        => _ => purchaseRoutes.InvoiceTypeController.onPageLoad(NormalMode)
@@ -81,6 +82,7 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case CheckYourStateDetailsPage         => userAnswers => navigateFromCheckYourStateDetailsPage(CheckMode)(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(CheckMode)(userAnswers)
     case ImportSubCodePage                 => _ => importRoutes.SadReferenceController.onPageLoad
+    case ImportDetailsInfoPage             => userAnswers => navigateFromImportDetailsInfoPage(NormalMode)(userAnswers)
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(CheckMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(CheckMode, userAnswers)
     case DescribeItemsOnInvoicePage        => _ => purchaseRoutes.CheckYourPurchaseDetailsController.onPageLoad()
@@ -279,4 +281,10 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
         controllers.routes.JourneyRecoveryController.onPageLoad()
     }
   }
+
+  private def navigateFromImportDetailsInfoPage(mode: Mode)(userAnswers: UserAnswers): Call =
+    mode match {
+      case NormalMode => controllers.routes.JourneyRecoveryController.onPageLoad()
+      case CheckMode => controllers.routes.JourneyRecoveryController.onPageLoad()
+    }
 }
