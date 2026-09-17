@@ -495,6 +495,22 @@ importType.luxuries = Luxuries, entertainment and hospitality
 importType.other = Other
 importType.error.required = Select the type of import
 
+importSubCode.fuel.title = What is the fuel used for?
+importSubCode.fuel.heading = What is the fuel used for?
+importSubCode.fuel.error.required = Select what the fuel is used for
+importSubCode.transport.title = What is the type of transport cost?
+importSubCode.transport.heading = What is the type of transport cost?
+importSubCode.transport.error.required = Select the type of transport cost
+importSubCode.foodAndDrink.title = What is the type of food, drink or restaurant cost?
+importSubCode.foodAndDrink.heading = What is the type of food, drink or restaurant cost?
+importSubCode.foodAndDrink.error.required = Select the type of food, drink or restaurant cost
+importSubCode.luxuries.title = What is the type of luxury, entertainment or hospitality cost?
+importSubCode.luxuries.heading = What is the type of luxury, entertainment or hospitality cost?
+importSubCode.luxuries.error.required = Select the type of luxury, entertainment or hospitality cost
+importSubCode.other.title = What other category best describes the item?
+importSubCode.other.heading = What other category best describes the item?
+importSubCode.other.error.required = Select the type of import
+
 # Warning messages
 confirmRefundPeriodStartDate.title = Are you sure the refund period start date is correct?
 confirmRefundPeriodStartDate.heading = Are you sure the refund period start date is correct?

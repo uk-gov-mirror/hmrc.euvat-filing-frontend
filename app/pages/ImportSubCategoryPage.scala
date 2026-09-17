@@ -18,21 +18,18 @@ package pages
 
 import models.UserAnswers
 import play.api.libs.json.JsPath
-import queries.Gettable
-import queries.Settable
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
-case object ImportSubCategoryPage extends Gettable[String] with Settable[String] {
+case object ImportSubCategoryPage extends QuestionPage[String] {
 
-  override def path: JsPath = JsPath \ "importSubCategory"
+  override def path: JsPath = JsPath \ toString
+
+  override def toString: String = "importSubCategory"
 
   override def cleanup(value: Option[String], userAnswers: UserAnswers): Try[UserAnswers] =
     value match {
-      case None =>
-        for {
-          clearedLabel <- userAnswers.remove(queries.ImportSubCategoryLabelQuery)
-        } yield clearedLabel
-      case Some(_) => scala.util.Success(userAnswers)
+      case None    => userAnswers.remove(queries.ImportSubCategoryLabelQuery)
+      case Some(_) => Success(userAnswers)
     }
 }
