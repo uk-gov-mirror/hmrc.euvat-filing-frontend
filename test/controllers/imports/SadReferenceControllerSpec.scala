@@ -89,7 +89,7 @@ class SadReferenceControllerSpec extends SpecBase with MockitoSugar {
             val result = route(application, request).value
 
             status(result) mustBe SEE_OTHER
-            redirectLocation(result).value mustBe controllers.routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
+            redirectLocation(result).value mustBe controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
           }
         }
 
