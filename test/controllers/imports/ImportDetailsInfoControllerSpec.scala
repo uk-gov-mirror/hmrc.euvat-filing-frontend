@@ -1,3 +1,19 @@
+/*
+ * Copyright 2026 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package controllers
 
 import base.SpecBase
@@ -13,7 +29,7 @@ import play.api.mvc.Call
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.SessionRepository
-import views.html.ImportDetailsInfoView
+import views.html.imports.ImportDetailsInfoView
 
 import scala.concurrent.Future
 
@@ -21,7 +37,7 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
 
   def onwardRoute = Call("GET", "/foo")
 
-  lazy val importDetailsInfoRoute: String = controllers.imports.routes.ImportsDetailsInfoController.onPageLoad(NormalMode).url
+  lazy val importDetailsInfoRoute: String = controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
   lazy val backLinkCall: Call             = controllers.routes.PurchaseOrImportController.onPageLoad
 
   val formProvider = new ImportDetailsInfoFormProvider()
@@ -65,6 +81,7 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
 
       "must redirect to Journey Recovery for a GET if no existing data is found" in {
 
+          val userAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "answer").success.value
           val application = applicationBuilder(userAnswers = Some(userAnswers)).build()
 
           running(application) {
@@ -105,7 +122,7 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
 
     "must redirect to Journey Recovery (as a placeholder for the warning page ) when the page has already been answered" in {
 
-          val existingAnswers = userAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
+          val existingAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
 
           val mockSessionRepository = mock[SessionRepository]
 
