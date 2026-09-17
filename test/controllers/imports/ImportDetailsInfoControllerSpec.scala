@@ -21,10 +21,11 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
 
   def onwardRoute = Call("GET", "/foo")
 
+  lazy val importDetailsInfoRoute: String = controllers.imports.routes.ImportsDetailsInfoController.onPageLoad(NormalMode).url
+  lazy val backLinkCall: Call             = controllers.routes.PurchaseOrImportController.onPageLoad
+
   val formProvider = new ImportDetailsInfoFormProvider()
   val form = formProvider()
-
-  lazy val importDetailsInfoRoute = routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
 
   "ImportDetailsInfo Controller" - {
 
@@ -40,7 +41,7 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
         val view = application.injector.instanceOf[ImportDetailsInfoView]
 
         status(result) mustEqual OK
-        contentAsString(result) mustEqual view(form, NormalMode)(request, messages(application)).toString
+        contentAsString(result) mustEqual view(form, NormalMode, backLinkCall)(request, messages(application)).toString
       }
     }
 
@@ -58,11 +59,25 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
         val result = route(application, request).value
 
         status(result) mustEqual OK
-        contentAsString(result) mustEqual view(form.fill("answer"), NormalMode)(request, messages(application)).toString
+        contentAsString(result) mustEqual view(form.fill("answer"), NormalMode, backLinkCall)(request, messages(application)).toString
       }
     }
 
-    "must redirect to the next page when valid data is submitted" in {
+      "must redirect to Journey Recovery for a GET if no existing data is found" in {
+
+          val application = applicationBuilder(userAnswers = Some(userAnswers)).build()
+
+          running(application) {
+            val request = FakeRequest(GET, importDetailsInfoRoute)
+
+            val result = route(application, request).value
+
+            status(result) mustEqual SEE_OTHER
+            redirectLocation(result).value mustEqual routes.JourneyRecoveryController.onPageLoad().url
+          }
+        }
+
+    "must redirect to the next page when valid data is submitted for the first time" in {
 
       val mockSessionRepository = mock[SessionRepository]
 
@@ -88,7 +103,36 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must return a Bad Request and errors when invalid data is submitted" in {
+    "must redirect to Journey Recovery (as a placeholder for the warning page ) when the page has already been answered" in {
+
+          val existingAnswers = userAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
+
+          val mockSessionRepository = mock[SessionRepository]
+
+          when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
+
+          val application =
+            applicationBuilder(userAnswers = Some(existingAnswers))
+              .overrides(
+                bind[Navigator].toInstance(new FakeNavigator(onwardRoute)),
+                bind[SessionRepository].toInstance(mockSessionRepository)
+              )
+              .build()
+
+          running(application) {
+            val request =
+              FakeRequest(POST, importDetailsInfoRoute)
+                .withFormUrlEncodedBody(("value", "a different answer"))
+
+            val result = route(application, request).value
+
+            status(result) mustEqual SEE_OTHER
+            //TODO: update once the wrn11 warning controller is built
+            redirectLocation(result).value mustEqual routes.JourneyRecoveryController.onPageLoad().url
+          }
+        }
+
+    "must return a Bad Request and errors when empty data is submitted" in {
 
       val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
 
@@ -104,9 +148,30 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
         val result = route(application, request).value
 
         status(result) mustEqual BAD_REQUEST
-        contentAsString(result) mustEqual view(boundForm, NormalMode)(request, messages(application)).toString
+        contentAsString(result) mustEqual view(boundForm, NormalMode, backLinkCall)(request, messages(application)).toString
       }
     }
+
+     "must return a Bad Request and errors when data over 255 characters is submitted" in {
+
+          val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
+
+          running(application) {
+            val tooLong = "a" * 256
+            val request =
+              FakeRequest(POST, importDetailsInfoRoute)
+                .withFormUrlEncodedBody(("value",tooLong))
+
+            val boundForm = form.bind(Map("value" -> tooLong))
+
+            val view = application.injector.instanceOf[ImportDetailsInfoView]
+
+            val result = route(application, request).value
+
+            status(result) mustEqual BAD_REQUEST
+            contentAsString(result) mustEqual view(boundForm, NormalMode, backLinkCall)(request, messages(application)).toString
+          }
+        }
 
     "must redirect to Journey Recovery for a GET if no existing data is found" in {
 
