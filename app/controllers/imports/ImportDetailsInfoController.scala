@@ -46,7 +46,7 @@ class ImportDetailsInfoController @Inject()(
 
   val form: Form[String] = formProvider()
 
-  private def backLink(mode: Mode)(implicit request: DataRequest[?]) = controllers.routes.PurchaseOrImportController.onPageLoad
+  private def backLink(mode: Mode)(implicit request: DataRequest[?]) = controllers.imports.routes.SadReferenceController.onPageLoad
 
   def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) {
     implicit request =>

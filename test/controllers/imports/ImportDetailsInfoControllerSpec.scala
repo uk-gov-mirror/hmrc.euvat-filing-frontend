@@ -38,7 +38,7 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
   def onwardRoute = Call("GET", "/foo")
 
   lazy val importDetailsInfoRoute: String = controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
-  lazy val backLinkCall: Call             = controllers.routes.PurchaseOrImportController.onPageLoad
+  lazy val backLinkCall: Call             = controllers.routes.SadReferenceController.onPageLoad
 
   val formProvider = new ImportDetailsInfoFormProvider()
   val form = formProvider()
