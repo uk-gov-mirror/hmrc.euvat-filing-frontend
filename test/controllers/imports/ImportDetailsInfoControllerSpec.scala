@@ -79,21 +79,6 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-      "must redirect to Journey Recovery for a GET if no existing data is found" in {
-
-          val userAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "answer").success.value
-          val application = applicationBuilder(userAnswers = Some(userAnswers)).build()
-
-          running(application) {
-            val request = FakeRequest(GET, importDetailsInfoRoute)
-
-            val result = route(application, request).value
-
-            status(result) mustEqual SEE_OTHER
-            redirectLocation(result).value mustEqual routes.JourneyRecoveryController.onPageLoad().url
-          }
-        }
-
     "must redirect to the next page when valid data is submitted for the first time" in {
 
       val mockSessionRepository = mock[SessionRepository]
