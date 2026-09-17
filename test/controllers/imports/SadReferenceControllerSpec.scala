@@ -17,6 +17,7 @@
 package controllers.imports
 
 import base.SpecBase
+import models.NormalMode
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
