@@ -66,11 +66,16 @@ class ImportDetailsInfoController @Inject()(
         formWithErrors =>
           Future.successful(BadRequest(view(formWithErrors, mode, backLink(mode)))),
 
-        value =>
+        value => {
+          val alreadyAnswered = request.userAnswers.get(ImportDetailsInfoPage).isDefined
           for {
             updatedAnswers <- Future.fromTry(request.userAnswers.set(ImportDetailsInfoPage, value))
             _              <- sessionRepository.set(updatedAnswers)
-          } yield Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
+          } yield (mode, alreadyAnswered) match {
+             case (NormalMode, true) => Redirect(controllers.routes.JourneyRecoveryController.onPageLoad())
+             case _                  => Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
+            }
+          }
       )
   }
 }
