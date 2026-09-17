@@ -26,6 +26,7 @@ import play.api.data.Form
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents}
 import repositories.SessionRepository
+import models.NormalMode
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 import views.html.imports.SadReferenceView
 
@@ -67,7 +68,12 @@ class SadReferenceController @Inject() (
           for {
             updated <- Future.fromTry(request.userAnswers.set(SadReferencePage, value))
             _       <- sessionRepository.set(updated)
-          } yield Redirect(controllers.routes.JourneyRecoveryController.onPageLoad())
+          } yield value match {
+            case true =>
+                Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with SadReferenceNumberController once built
+            case false =>
+                Redirect(controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode))
+          }
       )
   }
 
