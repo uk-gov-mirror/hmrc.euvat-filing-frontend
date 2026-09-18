@@ -35,7 +35,7 @@ class SadReferenceNumberFormProviderSpec extends StringFieldBehaviours {
 
     val allowedChars: Seq[Char] =
       ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9') ++ Seq(' ', '.', ',', '-', '(', ')', '/', '=', '!', '"', '%', '&', '*', ';', '<', '>', '\'', ':',
-                                                      '+', '?', '#', '$', '@', '[', ']', '\\', '^', '_', '`', '{', '}', '|', '~')
+                                                          '+', '?', '#', '$', '@', '[', ']', '\\', '^', '_', '`', '{', '}', '|', '~')
 
     val genValidString = for {
       len   <- org.scalacheck.Gen.choose(1, maxLength)
@@ -53,7 +53,7 @@ class SadReferenceNumberFormProviderSpec extends StringFieldBehaviours {
     behave like fieldWithMaxLength(
       form,
       fieldName,
-      maxLength = maxLength,
+      maxLength   = maxLength,
       lengthError = FormError(fieldName, lengthKey, Seq(maxLength))
     )
 

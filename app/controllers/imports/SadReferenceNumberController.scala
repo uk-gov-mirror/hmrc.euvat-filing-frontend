@@ -64,7 +64,7 @@ class SadReferenceNumberController @Inject() (
           for {
             updated <- Future.fromTry(request.userAnswers.set(SadReferenceNumberPage, value))
             _       <- sessionRepository.set(updated)
-            } yield Redirect(navigator.nextPage(SadReferenceNumberPage, mode, updated))
+          } yield Redirect(navigator.nextPage(SadReferenceNumberPage, mode, updated))
       )
   }
 

@@ -33,7 +33,7 @@ class SadReferenceControllerSpec extends SpecBase with MockitoSugar {
 
       running(application) {
         val request = FakeRequest(GET, controllers.imports.routes.SadReferenceController.onPageLoad(NormalMode).url)
-        val result  = route(application, request).value
+        val result = route(application, request).value
 
         status(result) mustBe OK
         val view = application.injector.instanceOf[views.html.imports.SadReferenceView]
