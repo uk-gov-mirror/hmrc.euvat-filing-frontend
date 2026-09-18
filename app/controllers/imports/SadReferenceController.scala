@@ -70,9 +70,9 @@ class SadReferenceController @Inject() (
             _       <- sessionRepository.set(updated)
           } yield value match {
             case true =>
-                Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with SadReferenceNumberController once built
+              Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with SadReferenceNumberController once built
             case false =>
-                Redirect(controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode))
+              Redirect(controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode))
           }
       )
   }

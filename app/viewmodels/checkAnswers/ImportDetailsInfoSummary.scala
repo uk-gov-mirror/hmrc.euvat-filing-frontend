@@ -22,22 +22,21 @@ import pages.ImportDetailsInfoPage
 import play.api.i18n.Messages
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
-import viewmodels.govuk.summarylist._
-import viewmodels.implicits._
+import viewmodels.govuk.summarylist.*
+import viewmodels.implicits.*
 
-object ImportDetailsInfoSummary  {
+object ImportDetailsInfoSummary {
 
   def row(answers: UserAnswers)(implicit messages: Messages): Option[SummaryListRow] =
-    answers.get(ImportDetailsInfoPage).map {
-      answer =>
+    answers.get(ImportDetailsInfoPage).map { answer =>
 
-        SummaryListRowViewModel(
-          key     = "importDetailsInfo.checkYourAnswersLabel",
-          value   = ValueViewModel(HtmlFormat.escape(answer).toString),
-          actions = Seq(
-            ActionItemViewModel("site.change", controllers.imports.routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
-              .withVisuallyHiddenText(messages("importDetailsInfo.change.hidden"))
-          )
+      SummaryListRowViewModel(
+        key   = "importDetailsInfo.checkYourAnswersLabel",
+        value = ValueViewModel(HtmlFormat.escape(answer).toString),
+        actions = Seq(
+          ActionItemViewModel("site.change", controllers.imports.routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
+            .withVisuallyHiddenText(messages("importDetailsInfo.change.hidden"))
         )
+      )
     }
 }

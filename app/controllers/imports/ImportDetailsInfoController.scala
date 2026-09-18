@@ -32,50 +32,51 @@ import play.api.data.Form
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ImportDetailsInfoController @Inject()(
-                                        override val messagesApi: MessagesApi,
-                                        sessionRepository: SessionRepository,
-                                        navigator: Navigator,
-                                        identify: IdentifierAction,
-                                        getData: DataRetrievalAction,
-                                        requireData: DataRequiredAction,
-                                        formProvider: ImportDetailsInfoFormProvider,
-                                        val controllerComponents: MessagesControllerComponents,
-                                        view: ImportDetailsInfoView
-                                    )(implicit ec: ExecutionContext) extends FrontendBaseController with I18nSupport {
+class ImportDetailsInfoController @Inject() (
+  override val messagesApi: MessagesApi,
+  sessionRepository: SessionRepository,
+  navigator: Navigator,
+  identify: IdentifierAction,
+  getData: DataRetrievalAction,
+  requireData: DataRequiredAction,
+  formProvider: ImportDetailsInfoFormProvider,
+  val controllerComponents: MessagesControllerComponents,
+  view: ImportDetailsInfoView
+)(implicit ec: ExecutionContext)
+    extends FrontendBaseController
+    with I18nSupport {
 
   val form: Form[String] = formProvider()
 
   private def backLink(mode: Mode)(implicit request: DataRequest[?]) = controllers.imports.routes.SadReferenceController.onPageLoad
 
-  def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) {
-    implicit request =>
+  def onPageLoad(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData) { implicit request =>
 
-      val preparedForm = request.userAnswers.get(ImportDetailsInfoPage) match {
-        case None => form
-        case Some(value) => form.fill(value)
-      }
+    val preparedForm = request.userAnswers.get(ImportDetailsInfoPage) match {
+      case None        => form
+      case Some(value) => form.fill(value)
+    }
 
-      Ok(view(preparedForm, mode, backLink(mode)))
+    Ok(view(preparedForm, mode, backLink(mode)))
   }
 
-  def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async {
-    implicit request =>
+  def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>
 
-      form.bindFromRequest().fold(
-        formWithErrors =>
-          Future.successful(BadRequest(view(formWithErrors, mode, backLink(mode)))),
-
+    form
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future.successful(BadRequest(view(formWithErrors, mode, backLink(mode)))),
         value => {
           val alreadyAnswered = request.userAnswers.get(ImportDetailsInfoPage).isDefined
           for {
             updatedAnswers <- Future.fromTry(request.userAnswers.set(ImportDetailsInfoPage, value))
             _              <- sessionRepository.set(updatedAnswers)
           } yield (mode, alreadyAnswered) match {
-             case (NormalMode, true) => Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with the wrn11 controller once built
-             case _                  => Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
-            }
+            case (NormalMode, true) =>
+              Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with the wrn11 controller once built
+            case _ => Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
           }
+        }
       )
   }
 }

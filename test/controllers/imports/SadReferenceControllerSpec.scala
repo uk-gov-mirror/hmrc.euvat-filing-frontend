@@ -75,24 +75,24 @@ class SadReferenceControllerSpec extends SpecBase with MockitoSugar {
         val result = route(application, request).value
 
         status(result) mustBe SEE_OTHER
-        //TODO: update to SadReferenceNumberController once built
+        // TODO: update to SadReferenceNumberController once built
         redirectLocation(result).value mustBe controllers.routes.JourneyRecoveryController.onPageLoad().url
       }
     }
 
     "must redirect to ImportDetailsInfoController when 'no' is submitted" in {
-          val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
+      val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
 
-          running(application) {
-            val request = FakeRequest(POST, controllers.imports.routes.SadReferenceController.onSubmit.url)
-              .withFormUrlEncodedBody("value" -> "false")
+      running(application) {
+        val request = FakeRequest(POST, controllers.imports.routes.SadReferenceController.onSubmit.url)
+          .withFormUrlEncodedBody("value" -> "false")
 
-            val result = route(application, request).value
+        val result = route(application, request).value
 
-            status(result) mustBe SEE_OTHER
-            redirectLocation(result).value mustBe controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
-          }
-        }
+        status(result) mustBe SEE_OTHER
+        redirectLocation(result).value mustBe controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode).url
+      }
+    }
 
     "must return a Bad Request and errors when invalid data is submitted" in {
       val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()

@@ -285,6 +285,6 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
   private def navigateFromImportDetailsInfoPage(mode: Mode)(userAnswers: UserAnswers): Call =
     mode match {
       case NormalMode => controllers.routes.JourneyRecoveryController.onPageLoad()
-      case CheckMode => controllers.routes.JourneyRecoveryController.onPageLoad()
+      case CheckMode  => controllers.routes.JourneyRecoveryController.onPageLoad()
     }
 }
