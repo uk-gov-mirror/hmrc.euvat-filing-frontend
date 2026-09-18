@@ -72,7 +72,7 @@ class ImportDetailsInfoController @Inject()(
             updatedAnswers <- Future.fromTry(request.userAnswers.set(ImportDetailsInfoPage, value))
             _              <- sessionRepository.set(updatedAnswers)
           } yield (mode, alreadyAnswered) match {
-             case (NormalMode, true) => Redirect(controllers.routes.JourneyRecoveryController.onPageLoad())
+             case (normalMode, true) => Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with the wrn11 controller once built
              case _                  => Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
             }
           }

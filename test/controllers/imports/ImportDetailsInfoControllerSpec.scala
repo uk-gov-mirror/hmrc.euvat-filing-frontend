@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import forms.ImportDetailsInfoFormProvider
-import models.{NormalMode, UserAnswers}
+import models.{NormalMode, CheckMode, UserAnswers}
 import navigation.{FakeNavigator, Navigator}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -105,7 +105,7 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must redirect to Journey Recovery (as a placeholder for the warning page ) when the page has already been answered" in {
+    "must redirect to Journey Recovery (as a placeholder for the warning page ) when the user visits the Import Details page more than once" in {
 
           val existingAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
 
@@ -133,6 +133,35 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
             redirectLocation(result).value mustEqual routes.JourneyRecoveryController.onPageLoad().url
           }
         }
+
+     "must not show the warning when the user is only changing their answer via the CYA page" in {
+
+              val existingAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
+
+              val mockSessionRepository = mock[SessionRepository]
+
+              when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
+
+              val application =
+                applicationBuilder(userAnswers = Some(existingAnswers))
+                  .overrides(
+                    bind[Navigator].toInstance(new FakeNavigator(onwardRoute)),
+                    bind[SessionRepository].toInstance(mockSessionRepository)
+                  )
+                  .build()
+
+              running(application) {
+                val request =
+                  FakeRequest(POST, controllers.imports.routes.ImportDetailsInfoController.onSubmit(CheckMode).url)
+                    .withFormUrlEncodedBody(("value", "a different answer"))
+
+                val result = route(application, request).value
+
+                status(result) mustEqual SEE_OTHER
+                redirectLocation(result).value mustEqual onwardRoute.url
+              }
+            }
+
 
     "must return a Bad Request and errors when empty data is submitted" in {
 
