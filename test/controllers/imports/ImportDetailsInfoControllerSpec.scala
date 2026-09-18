@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.imports
 
 import base.SpecBase
 import forms.ImportDetailsInfoFormProvider
