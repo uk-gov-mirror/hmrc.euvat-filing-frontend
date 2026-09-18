@@ -149,12 +149,6 @@ class NavigatorSpec extends SpecBase {
           controllers.imports.routes.SadReferenceController.onPageLoad(NormalMode)
       }
 
-      "must go from PurchaseOrImportPage to SAD reference page when Import selected" in {
-        val ua = userAnswers.set(PurchaseOrImportPage, PurchaseOrImport.Import).success.value
-        navigator.nextPage(PurchaseOrImportPage, NormalMode, ua) mustBe
-          controllers.imports.routes.SadReferenceController.onPageLoad(NormalMode)
-      }
-
       "must go from PurchaseOrImportPage to ImportTypeController when Import selected" in {
         val ua = userAnswers.set(PurchaseOrImportPage, PurchaseOrImport.Import).success.value
         navigator.nextPage(PurchaseOrImportPage, NormalMode, ua) mustBe
