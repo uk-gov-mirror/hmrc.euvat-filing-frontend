@@ -145,8 +145,9 @@ class NavigatorSpec extends SpecBase {
       }
 
       "must go from ImportTypePage to SadReferenceController" in {
-        navigator.nextPage(ImportTypePage, NormalMode, emptyUserAnswers) mustBe
-          controllers.imports.routes.SadReferenceController.onPageLoad(NormalMode)
+        val ua = emptyUserAnswers.set(ImportTypePage, Fuel).success.value
+        navigator.nextPage(ImportTypePage, NormalMode, ua) mustBe
+          controllers.routes.JourneyRecoveryController.onPageLoad()
       }
 
       "must go from PurchaseOrImportPage to ImportTypeController when Import selected" in {

@@ -64,7 +64,7 @@ class SadReferenceController @Inject() (
     form
       .bindFromRequest()
       .fold(
-        formWithErrors => Future.successful(BadRequest(view(formWithErrors, back))),
+        formWithErrors => Future.successful(BadRequest(view(formWithErrors, computeBackLink))),
         value =>
           for {
             updated <- Future.fromTry(request.userAnswers.set(SadReferencePage, value))

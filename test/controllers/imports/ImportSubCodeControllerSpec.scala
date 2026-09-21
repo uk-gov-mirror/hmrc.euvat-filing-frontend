@@ -33,7 +33,7 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
 
   private def fuelRoute = controllers.imports.routes.ImportSubCodeController.onPageLoad("fuel").url
   private def journeyRecoveryUrl = controllers.routes.JourneyRecoveryController.onPageLoad().url
-  private def sadReferenceUrl = controllers.imports.routes.SadReferenceController.onPageLoad.url
+  private def sadReferenceUrl = controllers.imports.routes.SadReferenceController.onPageLoad(NormalMode).url
   private def taskListUrl = controllers.routes.TaskListDashboardController.onPageLoad().url
 
   private def answers(importType: PurchaseOrImportType = Fuel, country: String = "AT"): UserAnswers =
