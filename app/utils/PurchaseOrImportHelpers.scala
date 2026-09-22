@@ -30,15 +30,16 @@ object PurchaseOrImportHelpers {
   private def lastSegment(code: String): String =
     code.split("\\.").lastOption.getOrElse(code)
 
-  def radioItems(config: ConfigPurchaseMapping, options: Seq[(String, String)])(implicit messages: Messages): Seq[RadioItem] = {
+  def radioItems(config: ConfigPurchaseOrImportMapping, options: Seq[(String, String)])(implicit messages: Messages): Seq[RadioItem] = {
     val items = config.buildRadioItems(options, messages)
-    if (options.exists(_._1 == ConfigPurchaseMapping.NoneOfTheseSubCode)) items.filterNot(_.value.contains(ConfigPurchaseMapping.NoneValue))
+    if (options.exists(_._1 == ConfigPurchaseOrImportMapping.NoneOfTheseSubCode))
+      items.filterNot(_.value.contains(ConfigPurchaseOrImportMapping.NoneValue))
     else items
   }
 
   def allowedValues(options: Seq[(String, String)]): Seq[String] = {
     val codes = options.map(_._1)
-    if (codes.contains(ConfigPurchaseMapping.NoneOfTheseSubCode)) codes else codes :+ ConfigPurchaseMapping.NoneValue
+    if (codes.contains(ConfigPurchaseOrImportMapping.NoneOfTheseSubCode)) codes else codes :+ ConfigPurchaseOrImportMapping.NoneValue
   }
 
   def requiredErrorKey(parentKey: String, parentCode: Option[String] = None)(implicit messages: Messages): String = {

@@ -16,9 +16,6 @@
 
 package controllers.imports
 
-class ImportSubCategoryControllerSpec {
-
-}
 import base.SpecBase
 import models.{Fuel, NormalMode, UserAnswers}
 import org.mockito.ArgumentCaptor
@@ -35,6 +32,7 @@ class ImportSubCategoryControllerSpec extends SpecBase {
   private def subCategoryRoute = controllers.imports.routes.ImportSubCategoryController.onPageLoad(NormalMode).url
   private def submitRoute = controllers.imports.routes.ImportSubCategoryController.onSubmit(NormalMode).url
   private def journeyRecoveryUrl = controllers.routes.JourneyRecoveryController.onPageLoad().url
+  private def sadReferenceUrl = controllers.imports.routes.SadReferenceController.onPageLoad.url
 
   private def answers(subCode: String = "1.2"): UserAnswers =
     emptyUserAnswers
@@ -156,7 +154,7 @@ class ImportSubCategoryControllerSpec extends SpecBase {
       }
     }
 
-    "must save the sub category and its label and redirect when valid data is submitted" in {
+    "must save the sub category and its label and redirect to the SAD reference page when valid data is submitted" in {
       val application = applicationBuilder(userAnswers = Some(answers()))
         .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
         .build()
@@ -166,7 +164,7 @@ class ImportSubCategoryControllerSpec extends SpecBase {
         val result = route(application, request).value
 
         status(result) mustEqual SEE_OTHER
-        redirectLocation(result).value mustEqual journeyRecoveryUrl
+        redirectLocation(result).value mustEqual sadReferenceUrl
 
         val saved = savedAnswers
         saved.get(ImportSubCategoryPage) mustBe Some("1.2.6")
@@ -174,7 +172,7 @@ class ImportSubCategoryControllerSpec extends SpecBase {
       }
     }
 
-    "must save the none marker and redirect when None is submitted" in {
+    "must save the none marker and redirect to Journey Recovery when None is submitted" in {
       val application = applicationBuilder(userAnswers = Some(answers()))
         .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
         .build()

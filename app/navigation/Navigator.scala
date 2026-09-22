@@ -51,7 +51,7 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case PurchaseOrImportPage              => userAnswers => navigateFromPurchaseOrImportPage(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(NormalMode)(userAnswers)
     case ImportSubCodePage                 => userAnswers => navigateFromImportSubCodePage(NormalMode)(userAnswers)
-    case ImportSubCategoryPage             => _ => controllers.routes.JourneyRecoveryController.onPageLoad() // TODO: sad check
+    case ImportSubCategoryPage             => userAnswers => navigateFromImportSubCategoryPage(userAnswers)
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(NormalMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(NormalMode, userAnswers)
     case DescribeItemsOnInvoicePage        => _ => purchaseRoutes.InvoiceTypeController.onPageLoad(NormalMode)
@@ -100,14 +100,6 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case TotalVatClaimPage                 => _ => purchaseRoutes.CheckYourPurchaseDetailsController.onPageLoad()
     case _                                 => _ => controllers.routes.IndexController.onPageLoad()
   }
-
-  private def navigateFromImportSubCodePage(mode: Mode)(userAnswers: UserAnswers): Call =
-    userAnswers.get(ImportSubCodePage) match {
-      case Some(value) if value == ConfigPurchaseOrImportMapping.NoneValue =>
-        controllers.routes.JourneyRecoveryController.onPageLoad()
-      case Some(_) => importRoutes.SadReferenceController.onPageLoad
-      case None    => controllers.routes.JourneyRecoveryController.onPageLoad()
-    }
 
   private def navigateFromRefundingCountryPage(mode: Mode, userAnswers: UserAnswers) = {
     CountryCode.findCountryCode(userAnswers) match {
@@ -270,24 +262,23 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
       case None           => controllers.routes.JourneyRecoveryController.onPageLoad()
     }
 
-  private def navigateFromImportTypePage(userAnswers: UserAnswers): Call =
-    (userAnswers.get(ImportTypePage), CountryCode.findCountryCode(userAnswers)) match {
-      case (Some(importType), Some(country)) =>
-        if (configPurchaseMapping.selectableImportSubcodes(country, importType.toString).isDefined) {
-          importsRoutes.ImportSubCodeController.onPageLoad(importType.toString)
-        } else {
-          controllers.routes.TaskListDashboardController.onPageLoad()
-        }
-      case _ => controllers.routes.JourneyRecoveryController.onPageLoad()
-    }
-
-  private def navigateFromImportSubCodePage(userAnswers: UserAnswers): Call =
+  private def navigateFromImportSubCodePage(mode: Mode)(userAnswers: UserAnswers): Call =
     (userAnswers.get(ImportTypePage), userAnswers.get(ImportSubCodePage), CountryCode.findCountryCode(userAnswers)) match {
+      case (_, Some(ConfigPurchaseOrImportMapping.NoneValue), _) =>
+        controllers.routes.JourneyRecoveryController.onPageLoad()
       case (Some(importType), Some(subCode), Some(country))
           if configPurchaseMapping.subcategoriesFor(country, importType.toString, subCode).nonEmpty =>
-        importsRoutes.ImportSubCategoryController.onPageLoad(NormalMode)
+        importsRoutes.ImportSubCategoryController.onPageLoad(mode)
+      case (_, Some(_), _) =>
+        importsRoutes.SadReferenceController.onPageLoad
       case _ =>
-        controllers.routes.JourneyRecoveryController.onPageLoad() // TODO: sad check or item on import doc when no sub categories
+        controllers.routes.JourneyRecoveryController.onPageLoad()
+    }
+
+  private def navigateFromImportSubCategoryPage(userAnswers: UserAnswers): Call =
+    userAnswers.get(ImportSubCategoryPage) match {
+      case Some(ConfigPurchaseOrImportMapping.NoneValue) | None => controllers.routes.JourneyRecoveryController.onPageLoad()
+      case Some(_)                                              => importsRoutes.SadReferenceController.onPageLoad
     }
 
   private def navigateFromImportTypePage(mode: Mode)(userAnswers: UserAnswers): Call = {

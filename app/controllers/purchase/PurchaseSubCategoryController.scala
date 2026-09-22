@@ -214,39 +214,6 @@ class PurchaseSubCategoryController @Inject() (
         renderOrPersistParent(data, mode, request.userAnswers)
       }
     }
-
-  private def redirectAfterSubmit(mode: Mode): Result = ControllerHelpers.redirectToInvoiceTypeOrCYA(mode)
-
-  private def persistNoneSubCategorySelection(mode: Mode, userAnswers: UserAnswers)(implicit
-    request: DataRequest[AnyContent]
-  ): Future[Result] = {
-    val noneLabel = ConfigPurchaseOrImportMapping.NoneValue
-    val savedTry = for {
-      a1 <- userAnswers.set(PurchaseSubCategoryPage, ConfigPurchaseOrImportMapping.NoneValue)
-      a2 <- a1.set(PurchaseSubCategoryLabelPage, noneLabel)
-    } yield a2
-
-    for {
-      updatedAnswers <- Future.fromTry(savedTry)
-      _              <- sessionRepository.set(updatedAnswers)
-    } yield redirectAfterSubmit(mode)
-  }
-
-  private def persistSelectedSubCategory(value: String, options: Seq[(String, String)], mode: Mode, userAnswers: UserAnswers)(implicit
-    request: DataRequest[AnyContent]
-  ): Future[Result] = {
-    val labelKeyOpt = options.find(_._1 == value).map(_._2)
-    val label = labelKeyOpt.map(k => messagesApi.preferred(request)(k)).getOrElse(value)
-
-    val savedTry = for {
-      afterSet      <- userAnswers.set(PurchaseSubCategoryPage, value)
-      afterSetLabel <- afterSet.set(PurchaseSubCategoryLabelPage, label)
-    } yield afterSetLabel
-
-    for {
-      updatedAnswers <- Future.fromTry(savedTry)
-      _              <- sessionRepository.set(updatedAnswers)
-    } yield redirectAfterSubmit(mode)
   }
 
   private def handleSubmitValue(value: String, options: Seq[(String, String)], mode: Mode, userAnswers: UserAnswers)(implicit
@@ -260,11 +227,6 @@ class PurchaseSubCategoryController @Inject() (
         updatedAnswers <- Future.fromTry(setSelection(userAnswers, PurchaseSubCategoryPage, PurchaseSubCategoryLabelPage, value, label))
         _              <- sessionRepository.set(updatedAnswers)
       } yield ControllerHelpers.redirectToInvoiceTypeOrCYA(mode)
-      if (value == ConfigPurchaseOrImportMapping.NoneValue) {
-        persistNoneSubCategorySelection(mode, userAnswers)
-      } else {
-        persistSelectedSubCategory(value, options, mode, userAnswers)
-      }
     }
 
   def onSubmit(mode: Mode): Action[AnyContent] = (identify andThen getData andThen requireData).async { implicit request =>

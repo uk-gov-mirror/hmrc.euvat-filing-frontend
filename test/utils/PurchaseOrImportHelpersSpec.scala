@@ -30,33 +30,33 @@ class PurchaseOrImportHelpersSpec extends SpecBase {
     MessagesImpl(Lang("en"), stubMessagesApi(Map("en" -> entries.toMap)))
 
   private val noMessages: Messages = messagesWith()
-  private val config = new ConfigPurchaseMapping()
+  private val config = new ConfigPurchaseOrImportMapping()
   private val formProvider = new PurchaseOrImportSubTypeFormProvider()
 
   private val options = Seq(("1.2.6", "sub.fuel.2.6"), ("1.2.7", "sub.fuel.2.7"))
-  private val optionsWithNoneOfThese = Seq(("10.17", "sub.other.17"), (ConfigPurchaseMapping.NoneOfTheseSubCode, "sub.other.99"))
+  private val optionsWithNoneOfThese = Seq(("10.17", "sub.other.17"), (ConfigPurchaseOrImportMapping.NoneOfTheseSubCode, "sub.other.99"))
 
   "PurchaseOrImportHelpers" - {
 
     "radioItems" - {
 
       "must include the generic None item when options do not contain None of these" in {
-        radioItems(config, options)(noMessages).flatMap(_.value) mustBe Seq("1.2.6", "1.2.7", ConfigPurchaseMapping.NoneValue)
+        radioItems(config, options)(noMessages).flatMap(_.value) mustBe Seq("1.2.6", "1.2.7", ConfigPurchaseOrImportMapping.NoneValue)
       }
 
       "must drop the generic None item when options contain None of these" in {
-        radioItems(config, optionsWithNoneOfThese)(noMessages).flatMap(_.value) mustBe Seq("10.17", ConfigPurchaseMapping.NoneOfTheseSubCode)
+        radioItems(config, optionsWithNoneOfThese)(noMessages).flatMap(_.value) mustBe Seq("10.17", ConfigPurchaseOrImportMapping.NoneOfTheseSubCode)
       }
     }
 
     "allowedValues" - {
 
       "must add the None value when options do not contain None of these" in {
-        allowedValues(options) mustBe Seq("1.2.6", "1.2.7", ConfigPurchaseMapping.NoneValue)
+        allowedValues(options) mustBe Seq("1.2.6", "1.2.7", ConfigPurchaseOrImportMapping.NoneValue)
       }
 
       "must not add the None value when options contain None of these" in {
-        allowedValues(optionsWithNoneOfThese) mustBe Seq("10.17", ConfigPurchaseMapping.NoneOfTheseSubCode)
+        allowedValues(optionsWithNoneOfThese) mustBe Seq("10.17", ConfigPurchaseOrImportMapping.NoneOfTheseSubCode)
       }
     }
 
@@ -124,7 +124,7 @@ class PurchaseOrImportHelpersSpec extends SpecBase {
       }
 
       "must return the value itself for an unknown code" in {
-        labelFor(ConfigPurchaseMapping.NoneValue, options)(noMessages) mustBe ConfigPurchaseMapping.NoneValue
+        labelFor(ConfigPurchaseOrImportMapping.NoneValue, options)(noMessages) mustBe ConfigPurchaseOrImportMapping.NoneValue
       }
     }
 

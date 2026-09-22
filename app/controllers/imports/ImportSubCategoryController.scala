@@ -30,7 +30,7 @@ import queries.ImportSubCategoryLabelQuery
 import repositories.SessionRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 import utils.PurchaseOrImportHelpers.*
-import utils.{ConfigPurchaseMapping, CountryCode}
+import utils.{ConfigPurchaseOrImportMapping, CountryCode}
 import views.html.PurchaseOrImportSubTypeView
 
 import javax.inject.Inject
@@ -44,7 +44,7 @@ class ImportSubCategoryController @Inject() (
   getData: DataRetrievalAction,
   requireData: DataRequiredAction,
   formProvider: PurchaseOrImportSubTypeFormProvider,
-  config: ConfigPurchaseMapping,
+  config: ConfigPurchaseOrImportMapping,
   val controllerComponents: MessagesControllerComponents,
   view: PurchaseOrImportSubTypeView
 )(implicit ec: ExecutionContext)

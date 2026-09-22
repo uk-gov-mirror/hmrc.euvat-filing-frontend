@@ -19,9 +19,7 @@ package controllers.imports
 import base.SpecBase
 import models.{Fuel, NormalMode, Other, PurchaseOrImportType, Transport, UserAnswers}
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{times, verify}
-import org.scalatestplus.mockito.MockitoSugar
 import pages.{ImportSubCategoryPage, ImportSubCodePage, ImportTypePage, RefundingCountryPage}
 import play.api.inject.bind
 import play.api.test.FakeRequest
@@ -29,7 +27,7 @@ import play.api.test.Helpers.*
 import queries.{ImportSubCategoryLabelQuery, ImportSubTypeLabelQuery}
 import repositories.SessionRepository
 
-class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
+class ImportSubCodeControllerSpec extends SpecBase {
 
   private def fuelRoute = controllers.imports.routes.ImportSubCodeController.onPageLoad("fuel").url
   private def journeyRecoveryUrl = controllers.routes.JourneyRecoveryController.onPageLoad().url
@@ -108,7 +106,7 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must return OK with SAD question when the member state only offers the 10.99 sub-code" in {
+    "must return OK with the SAD question when the member state only offers the 10.99 sub-code" in {
       val application = applicationBuilder(userAnswers = Some(answers(Other))).build()
 
       running(application) {
@@ -120,8 +118,32 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must return OK with SAD question when the URL category does not match the import type answer" in {
+    "must return OK with the SAD question when the URL category does not match the import type answer" in {
       val application = applicationBuilder(userAnswers = Some(answers(Transport))).build()
+
+      running(application) {
+        val result = route(application, FakeRequest(GET, fuelRoute)).value
+
+        status(result) mustEqual OK
+        contentAsString(result) must include(messages(application)("singleAdministrativeDocumentReferenceNumberAvailable.heading"))
+      }
+    }
+
+    "must return OK with the SAD question when no import type has been answered" in {
+      val userAnswers = emptyUserAnswers.set(RefundingCountryPage, "AT").success.value
+      val application = applicationBuilder(userAnswers = Some(userAnswers)).build()
+
+      running(application) {
+        val result = route(application, FakeRequest(GET, fuelRoute)).value
+
+        status(result) mustEqual OK
+        contentAsString(result) must include(messages(application)("singleAdministrativeDocumentReferenceNumberAvailable.heading"))
+      }
+    }
+
+    "must return OK with the SAD question when no member state has been answered" in {
+      val userAnswers = emptyUserAnswers.set(ImportTypePage, Fuel).success.value
+      val application = applicationBuilder(userAnswers = Some(userAnswers)).build()
 
       running(application) {
         val result = route(application, FakeRequest(GET, fuelRoute)).value
@@ -160,7 +182,7 @@ class ImportSubCodeControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-    "must save the sub-code and redirect to Journey Recovery when the sub-code has no sub categories" in {
+    "must save the sub-code and redirect to the SAD reference page when the sub-code has no sub categories" in {
       val application = applicationBuilder(userAnswers = Some(answers()))
         .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
         .build()
