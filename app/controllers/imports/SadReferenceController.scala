@@ -20,6 +20,7 @@ import controllers.actions.*
 import forms.imports.SadReferenceFormProvider
 import pages.SadReferencePage
 import models.requests.DataRequest
+import navigation.Navigator
 
 import javax.inject.Inject
 import play.api.data.Form
@@ -35,6 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class SadReferenceController @Inject() (
   override val messagesApi: MessagesApi,
   sessionRepository: SessionRepository,
+  navigator: Navigator,
   identify: IdentifierAction,
   getData: DataRetrievalAction,
   requireData: DataRequiredAction,
@@ -68,12 +70,7 @@ class SadReferenceController @Inject() (
           for {
             updated <- Future.fromTry(request.userAnswers.set(SadReferencePage, value))
             _       <- sessionRepository.set(updated)
-          } yield value match {
-            case true =>
-              Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with SadReferenceNumberController once built
-            case false =>
-              Redirect(controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode))
-          }
+          } yield Redirect(navigator.nextPage(SadReferencePage, NormalMode, updated))
       )
   }
 

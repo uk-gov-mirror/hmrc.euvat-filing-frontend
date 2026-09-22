@@ -17,7 +17,7 @@
 package controllers.imports
 
 import controllers.actions.*
-import forms.ImportDetailsInfoFormProvider
+import forms.imports.ImportDetailsInfoFormProvider
 import models.requests.DataRequest
 import javax.inject.Inject
 import models.{Mode, NormalMode}
@@ -67,15 +67,10 @@ class ImportDetailsInfoController @Inject() (
       .fold(
         formWithErrors => Future.successful(BadRequest(view(formWithErrors, mode, backLink(mode)))),
         value => {
-          val alreadyAnswered = request.userAnswers.get(ImportDetailsInfoPage).isDefined
           for {
             updatedAnswers <- Future.fromTry(request.userAnswers.set(ImportDetailsInfoPage, value))
             _              <- sessionRepository.set(updatedAnswers)
-          } yield (mode, alreadyAnswered) match {
-            case (NormalMode, true) =>
-              Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()) // TODO: replace with the wrn11 controller once built
-            case _ => Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
-          }
+          } yield Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
         }
       )
   }

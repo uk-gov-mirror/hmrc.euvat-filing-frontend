@@ -51,6 +51,7 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case PurchaseOrImportPage              => userAnswers => navigateFromPurchaseOrImportPage(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(NormalMode)(userAnswers)
     case ImportSubCodePage                 => userAnswers => navigateFromImportSubCodePage(NormalMode)(userAnswers)
+    case SadReferencePage                  => userAnswers => navigateFromSadReferencePage(NormalMode)(userAnswers)
     case ImportDetailsInfoPage             => userAnswers => navigateFromImportDetailsInfoPage(NormalMode)(userAnswers)
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(NormalMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(NormalMode, userAnswers)
@@ -82,7 +83,8 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     case CheckYourStateDetailsPage         => userAnswers => navigateFromCheckYourStateDetailsPage(CheckMode)(userAnswers)
     case ImportTypePage                    => userAnswers => navigateFromImportTypePage(CheckMode)(userAnswers)
     case ImportSubCodePage                 => _ => importRoutes.SadReferenceController.onPageLoad
-    case ImportDetailsInfoPage             => userAnswers => navigateFromImportDetailsInfoPage(NormalMode)(userAnswers)
+    case SadReferencePage                  => userAnswers => navigateFromSadReferencePage(CheckMode)(userAnswers)
+    case ImportDetailsInfoPage             => userAnswers => navigateFromImportDetailsInfoPage(CheckMode)(userAnswers)
     case PurchaseTypePage                  => userAnswer => navigateFromPurchaseTypePage(CheckMode)(userAnswer)
     case PurchaseSubCategoryPage           => userAnswers => navigateFromPurchaseSubCategoryPage(CheckMode, userAnswers)
     case DescribeItemsOnInvoicePage        => _ => purchaseRoutes.CheckYourPurchaseDetailsController.onPageLoad()
@@ -109,6 +111,13 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
       case Some(_) => importRoutes.SadReferenceController.onPageLoad
       case None    => controllers.routes.JourneyRecoveryController.onPageLoad()
     }
+
+  private def navigateFromSadReferencePage(mode: Mode)(userAnswers: UserAnswers): Call =
+     userAnswers.get(SadReferencePage) match {
+       case Some(true)    => controllers.routes.JourneyRecoveryController.onPageLoad() // TODO: replace with "What is the SAD number?" controller once built
+       case Some(false)   => controllers.imports.routes.ImportDetailsInfoController.onPageLoad(mode)
+       case None          => controllers.routes.JourneyRecoveryController.onPageLoad()
+     }
 
   private def navigateFromRefundingCountryPage(mode: Mode, userAnswers: UserAnswers) = {
     CountryCode.findCountryCode(userAnswers) match {

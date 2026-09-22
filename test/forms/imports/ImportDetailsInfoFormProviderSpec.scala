@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package forms
+package forms.imports
 
 import forms.behaviours.StringFieldBehaviours
 import play.api.data.FormError
@@ -25,7 +25,8 @@ class ImportDetailsInfoFormProviderSpec extends StringFieldBehaviours {
   val lengthKey = "importDetailsInfo.error.length"
   val maxLength = 255
 
-  val form = new ImportDetailsInfoFormProvider()()
+  val formProvider = new ImportDetailsInfoFormProvider()
+  val form = formProvider()
 
   ".value" - {
 

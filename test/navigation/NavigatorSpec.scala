@@ -198,6 +198,18 @@ class NavigatorSpec extends SpecBase {
           controllers.routes.JourneyRecoveryController.onPageLoad()
       }
 
+      "must go from SadReferencePage to Journey Recovery when 'Yes' is submitted" in {
+        val ua = userAnswers.set(SadReferencePage, true).success.value
+        navigator.nextPage(SadReferencePage, NormalMode, ua) mustBe
+          controllers.routes.JourneyRecoveryController.onPageLoad()
+      }
+
+       "must go from SadReferencePage to ImportDetailsInfoController when 'No' is answered" in {
+        val ua = userAnswers.set(SadReferencePage, false).success.value
+        navigator.nextPage(SadReferencePage, NormalMode, ua) mustBe
+          controllers.imports.routes.ImportDetailsInfoController.onPageLoad(NormalMode)
+       }
+
         //TODO: replace with "When is the import date?" page controller once built
        "must go from ImportDetailsInfoPage to Journey Recovery in Normal Mode" in {
          navigator.nextPage(ImportDetailsInfoPage, NormalMode, emptyUserAnswers) mustBe

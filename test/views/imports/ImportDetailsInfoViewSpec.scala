@@ -17,7 +17,7 @@
 package views.html.imports
 
 import base.SpecBase
-import forms.ImportDetailsInfoFormProvider
+import forms.imports.ImportDetailsInfoFormProvider
 import models.NormalMode
 import play.api.mvc.Call
 import play.api.test.FakeRequest

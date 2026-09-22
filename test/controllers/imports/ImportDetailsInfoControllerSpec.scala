@@ -17,7 +17,7 @@
 package controllers.imports
 
 import base.SpecBase
-import forms.ImportDetailsInfoFormProvider
+import forms.imports.ImportDetailsInfoFormProvider
 import models.{CheckMode, NormalMode, UserAnswers}
 import navigation.{FakeNavigator, Navigator}
 import org.mockito.ArgumentMatchers.any
@@ -61,6 +61,23 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
+     "must return OK and the correct view for a GET in Check Mode" in {
+
+          val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
+
+          running(application) {
+            val request = FakeRequest(GET, controllers.imports.routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
+
+            val result = route(application, request).value
+
+            val view = application.injector.instanceOf[ImportDetailsInfoView]
+
+            status(result) mustEqual OK
+            contentAsString(result) mustEqual view(form, CheckMode, backLinkCall)(request, messages(application)).toString
+          }
+        }
+
+
     "must populate the view correctly on a GET when the question has previously been answered" in {
 
       val userAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "answer").success.value
@@ -97,63 +114,6 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
         val request =
           FakeRequest(POST, importDetailsInfoRoute)
             .withFormUrlEncodedBody(("value", "answer"))
-
-        val result = route(application, request).value
-
-        status(result) mustEqual SEE_OTHER
-        redirectLocation(result).value mustEqual onwardRoute.url
-      }
-    }
-
-    "must redirect to Journey Recovery (as a placeholder for the warning page ) when the user visits the Import Details page more than once" in {
-
-      val existingAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
-
-      val mockSessionRepository = mock[SessionRepository]
-
-      when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
-
-      val application =
-        applicationBuilder(userAnswers = Some(existingAnswers))
-          .overrides(
-            bind[Navigator].toInstance(new FakeNavigator(onwardRoute)),
-            bind[SessionRepository].toInstance(mockSessionRepository)
-          )
-          .build()
-
-      running(application) {
-        val request =
-          FakeRequest(POST, importDetailsInfoRoute)
-            .withFormUrlEncodedBody(("value", "a different answer"))
-
-        val result = route(application, request).value
-
-        status(result) mustEqual SEE_OTHER
-        // TODO: update once the wrn11 warning controller is built
-        redirectLocation(result).value mustEqual controllers.routes.JourneyRecoveryController.onPageLoad().url
-      }
-    }
-
-    "must not show the warning when the user is only changing their answer via the CYA page" in {
-
-      val existingAnswers = UserAnswers(userAnswersId).set(ImportDetailsInfoPage, "existing answer").success.value
-
-      val mockSessionRepository = mock[SessionRepository]
-
-      when(mockSessionRepository.set(any())) thenReturn Future.successful(true)
-
-      val application =
-        applicationBuilder(userAnswers = Some(existingAnswers))
-          .overrides(
-            bind[Navigator].toInstance(new FakeNavigator(onwardRoute)),
-            bind[SessionRepository].toInstance(mockSessionRepository)
-          )
-          .build()
-
-      running(application) {
-        val request =
-          FakeRequest(POST, controllers.imports.routes.ImportDetailsInfoController.onSubmit(CheckMode).url)
-            .withFormUrlEncodedBody(("value", "a different answer"))
 
         val result = route(application, request).value
 
