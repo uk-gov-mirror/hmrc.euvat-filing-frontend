@@ -182,7 +182,7 @@ class ImportSubCategoryControllerSpec extends SpecBase {
         val result = route(application, request).value
 
         status(result) mustEqual SEE_OTHER
-        redirectLocation(result).value mustEqual journeyRecoveryUrl
+        redirectLocation(result).value mustEqual sadReferenceUrl
         savedAnswers.get(ImportSubCategoryPage) mustBe Some("__none__")
       }
     }

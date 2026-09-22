@@ -197,7 +197,7 @@ class ImportSubCodeControllerSpec extends SpecBase {
       }
     }
 
-    "must save the none marker and redirect to Journey Recovery when None is submitted" in {
+    "must save the none marker and redirect to the SAD reference page when None is submitted" in {
       val application = applicationBuilder(userAnswers = Some(answers()))
         .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
         .build()
@@ -207,7 +207,7 @@ class ImportSubCodeControllerSpec extends SpecBase {
         val result = route(application, request).value
 
         status(result) mustEqual SEE_OTHER
-        redirectLocation(result).value mustEqual journeyRecoveryUrl
+        redirectLocation(result).value mustEqual sadReferenceUrl
         savedAnswers.get(ImportSubCodePage) mustBe Some("__none__")
       }
     }
