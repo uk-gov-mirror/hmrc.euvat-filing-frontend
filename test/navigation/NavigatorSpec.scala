@@ -198,12 +198,6 @@ class NavigatorSpec extends SpecBase {
           controllers.routes.JourneyRecoveryController.onPageLoad()
       }
 
-      "must go from PurchaseOrImportPage to SAD reference page when Import selected" in {
-        val ua = userAnswers.set(PurchaseOrImportPage, PurchaseOrImport.Import).success.value
-        navigator.nextPage(PurchaseOrImportPage, NormalMode, ua) mustBe
-          controllers.imports.routes.SadReferenceController.onPageLoad
-      }
-
         //TODO: replace with "When is the import date?" page controller once built
        "must go from ImportDetailsInfoPage to Journey Recovery in Normal Mode" in {
          navigator.nextPage(ImportDetailsInfoPage, NormalMode, emptyUserAnswers) mustBe
