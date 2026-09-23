@@ -55,8 +55,7 @@
                     content = Text(messages("importDetailsInfo.label"))
                 ),
                 value = form("value").value,
-                errorMessage = form("value").error.map(err => ErrorMessage(content = Text(messages(err.message, err.args*))))
-
+                errorMessage = form("value").error.map(err => ErrorMessage(content = Text(messages(err.message, err.args*)), visuallyHiddenText = Some(messages("error.prefix"))))
             ))
         </div>
 

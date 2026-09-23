@@ -113,11 +113,12 @@ class Navigator @Inject() (currencyConfig: CurrencyConfig,
     }
 
   private def navigateFromSadReferencePage(mode: Mode)(userAnswers: UserAnswers): Call =
-     userAnswers.get(SadReferencePage) match {
-       case Some(true)    => controllers.routes.JourneyRecoveryController.onPageLoad() // TODO: replace with "What is the SAD number?" controller once built
-       case Some(false)   => controllers.imports.routes.ImportDetailsInfoController.onPageLoad(mode)
-       case None          => controllers.routes.JourneyRecoveryController.onPageLoad()
-     }
+    userAnswers.get(SadReferencePage) match {
+      case Some(true) =>
+        controllers.routes.JourneyRecoveryController.onPageLoad() // TODO: replace with "What is the SAD number?" controller once built
+      case Some(false) => controllers.imports.routes.ImportDetailsInfoController.onPageLoad(mode)
+      case None        => controllers.routes.JourneyRecoveryController.onPageLoad()
+    }
 
   private def navigateFromRefundingCountryPage(mode: Mode, userAnswers: UserAnswers) = {
     CountryCode.findCountryCode(userAnswers) match {

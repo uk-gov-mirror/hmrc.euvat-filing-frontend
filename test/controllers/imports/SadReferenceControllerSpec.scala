@@ -58,7 +58,7 @@ class SadReferenceControllerSpec extends SpecBase with MockitoSugar {
 
       running(application) {
         val request = FakeRequest(GET, controllers.imports.routes.SadReferenceController.onPageLoad.url)
-        val result  = route(application, request).value
+        val result = route(application, request).value
 
         status(result) mustBe OK
         contentAsString(result) must include(controllers.imports.routes.ImportSubCodeController.onPageLoad(models.Fuel.toString).url)

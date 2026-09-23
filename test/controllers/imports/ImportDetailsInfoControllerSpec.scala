@@ -61,22 +61,21 @@ class ImportDetailsInfoControllerSpec extends SpecBase with MockitoSugar {
       }
     }
 
-     "must return OK and the correct view for a GET in Check Mode" in {
+    "must return OK and the correct view for a GET in Check Mode" in {
 
-          val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
+      val application = applicationBuilder(userAnswers = Some(emptyUserAnswers)).build()
 
-          running(application) {
-            val request = FakeRequest(GET, controllers.imports.routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
+      running(application) {
+        val request = FakeRequest(GET, controllers.imports.routes.ImportDetailsInfoController.onPageLoad(CheckMode).url)
 
-            val result = route(application, request).value
+        val result = route(application, request).value
 
-            val view = application.injector.instanceOf[ImportDetailsInfoView]
+        val view = application.injector.instanceOf[ImportDetailsInfoView]
 
-            status(result) mustEqual OK
-            contentAsString(result) mustEqual view(form, CheckMode, backLinkCall)(request, messages(application)).toString
-          }
-        }
-
+        status(result) mustEqual OK
+        contentAsString(result) mustEqual view(form, CheckMode, backLinkCall)(request, messages(application)).toString
+      }
+    }
 
     "must populate the view correctly on a GET when the question has previously been answered" in {
 

@@ -20,7 +20,7 @@ import controllers.actions.*
 import forms.imports.ImportDetailsInfoFormProvider
 import models.requests.DataRequest
 import javax.inject.Inject
-import models.{Mode, NormalMode}
+import models.Mode
 import navigation.Navigator
 import pages.ImportDetailsInfoPage
 import play.api.i18n.{I18nSupport, MessagesApi}
