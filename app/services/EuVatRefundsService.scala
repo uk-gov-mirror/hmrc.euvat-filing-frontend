@@ -71,4 +71,7 @@ class EuVatRefundsService @Inject() (euVatRefundsConnector: EuVatRefundsConnecto
   def getSadReferenceCount(request: SadReferenceCountRequest)(implicit hc: HeaderCarrier): Future[SadReferenceCountResponse] = {
     euVatRefundsConnector.getSadReferenceCount(request)
   }
+
+  def getReferenceInfoCount(request: ReferenceInfoCountRequest)(implicit headerCarrier: HeaderCarrier): Future[ReferenceInfoCountResponse] =
+    euVatRefundsConnector.getReferenceInfoCount(request)
 }

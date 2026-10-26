@@ -515,4 +515,40 @@ class EuVatRefundsConnectorSpec extends AnyWordSpec with Matchers with MockitoSu
     }
   }
 
+  "EuVatRefundsConnector.getReferenceInfoCount" should {
+    val itemNumber = 3
+    val applicationId = 123L
+    val url = url"$baseUrl/get-reference-information-count"
+    val request = ReferenceInfoCountRequest(applicationId, itemNumber)
+
+    "call the correct URL and return the expected response" in {
+      reset(mockHttp, mockRequestBuilder)
+
+      val expectedResponse = ReferenceInfoCountResponse(2)
+
+      when(mockHttp.post(url)(hc)).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.withBody(any())(any(), any(), any[ExecutionContext]())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.execute[ReferenceInfoCountRequest](any(), any[ExecutionContext]()))
+        .thenReturn(Future.successful(expectedResponse))
+
+      val result = connector.getReferenceInfoCount(request).futureValue
+
+      result shouldBe expectedResponse
+    }
+
+    "propagate failures from the HTTP client" in {
+      reset(mockHttp, mockRequestBuilder)
+      val failure = new RuntimeException("failure")
+
+      when(mockHttp.post(any())(any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.execute[ReferenceInfoCountRequest](any(), any()))
+        .thenReturn(Future.failed(failure))
+
+      val result = connector.getReferenceInfoCount(request)
+
+      result.failed.futureValue shouldBe failure
+    }
+  }
+
 }

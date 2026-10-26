@@ -18,18 +18,23 @@ package controllers.imports
 
 import controllers.actions.*
 import forms.imports.ImportDetailsInfoFormProvider
-import models.requests.DataRequest
-import javax.inject.Inject
-import models.Mode
+import models.requests.{DataRequest, ReferenceInfoCountRequest}
+import models.{Mode, UserAnswers}
 import navigation.Navigator
+import pages.AddImportResponsePage
 import pages.imports.{ImportDetailsInfoPage, SadReferenceCheckPage, SadReferenceNumberPage}
+import pages.purchase.AddPurchaseResponsePage
+import play.api.Logging
+import play.api.data.Form
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import queries.ClaimApplicationResponseQuery
 import repositories.SessionRepository
+import services.EuVatRefundsService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 import views.html.imports.ImportDetailsInfoView
-import play.api.data.Form
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ImportDetailsInfoController @Inject() (
@@ -41,9 +46,11 @@ class ImportDetailsInfoController @Inject() (
   requireData: DataRequiredAction,
   formProvider: ImportDetailsInfoFormProvider,
   val controllerComponents: MessagesControllerComponents,
+  euVatRefundsService: EuVatRefundsService,
   view: ImportDetailsInfoView
 )(implicit ec: ExecutionContext)
     extends FrontendBaseController
+    with Logging
     with I18nSupport {
 
   val form: Form[String] = formProvider()
@@ -75,11 +82,34 @@ class ImportDetailsInfoController @Inject() (
       .fold(
         formWithErrors => Future.successful(BadRequest(view(formWithErrors, mode, backLink(mode)))),
         value => {
-          for {
-            updatedAnswers <- Future.fromTry(request.userAnswers.set(ImportDetailsInfoPage, value))
-            _              <- sessionRepository.set(updatedAnswers)
-          } yield Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
+          buildRequest(request.userAnswers) match {
+            case Some(referenceInfoCountRequest) =>
+              euVatRefundsService
+                .getReferenceInfoCount(referenceInfoCountRequest)
+                .flatMap { response =>
+                  for {
+                    updatedAnswers <- Future.fromTry(request.userAnswers.set(ImportDetailsInfoPage, value))
+                    _              <- sessionRepository.set(updatedAnswers)
+                  } yield {
+                    if (response.count > 0) {
+                      Redirect(controllers.warning.routes.ImportDetailsWarningController.onPageLoad(mode))
+                    } else {
+                      Redirect(navigator.nextPage(ImportDetailsInfoPage, mode, updatedAnswers))
+                    }
+                  }
+                }
+            case None =>
+              logger.warn("Session is missing applicationId or itemNumber")
+              Future.successful(Redirect(controllers.routes.JourneyRecoveryController.onPageLoad()))
+          }
         }
       )
+  }
+
+  private def buildRequest(userAnswers: UserAnswers): Option[ReferenceInfoCountRequest] = {
+    for {
+      applicationId <- userAnswers.get(ClaimApplicationResponseQuery).map(_.applicationId)
+      itemNumber    <- userAnswers.get(AddImportResponsePage).map(_.itemNumber)
+    } yield ReferenceInfoCountRequest(applicationId, itemNumber)
   }
 }

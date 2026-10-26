@@ -118,4 +118,12 @@ class EuVatRefundsConnector @Inject() (config: ServicesConfig, http: HttpClientV
       .execute[SadReferenceCountResponse]
   }
 
+  def getReferenceInfoCount(
+    request: ReferenceInfoCountRequest
+  )(implicit hc: HeaderCarrier): Future[ReferenceInfoCountResponse] =
+    http
+      .post(url"$euVatRefundsBaseUrl/get-reference-information-count")
+      .withBody(Json.toJson(request))
+      .execute[ReferenceInfoCountResponse]
+
 }

@@ -370,4 +370,30 @@ class EuVatRefundsServiceSpec extends SpecBase with MockitoSugar with ScalaFutur
       }
     }
   }
+
+  "EuVatRefundsService.getReferenceInfoCount" - {
+    val itemNumber = 3
+    val applicationId = 123
+    val request = ReferenceInfoCountRequest(applicationId, itemNumber)
+
+    "should return reference information count when connector succeeds" in {
+      val response = ReferenceInfoCountResponse(2)
+      when(mockConnector.getReferenceInfoCount(request)(hc))
+        .thenReturn(Future.successful(response))
+
+      val result = service.getReferenceInfoCount(request).futureValue
+
+      result mustEqual response
+    }
+
+    "should propagate error when connector fails" in {
+      val exception = RuntimeException("Connector error")
+      when(mockConnector.getReferenceInfoCount(any[ReferenceInfoCountRequest]())(any[HeaderCarrier]()))
+        .thenReturn(Future.failed(exception))
+
+      val result = service.getReferenceInfoCount(request).failed.futureValue
+
+      result mustEqual exception
+    }
+  }
 }
