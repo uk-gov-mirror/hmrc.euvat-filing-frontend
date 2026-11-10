@@ -30,10 +30,11 @@ class SupportingDocumentsNavigatorSpec extends SpecBase {
       navigator.navigateFromBeforeYouStartPage() mustBe supportingDocumentsRoutes.AnyDocumentsController.onPageLoad()
     }
 
-    "must go from AnyDocumentsPage to Journey Recovery when the user has documents" in {
+    "must go from AnyDocumentsPage to UploadFileController when the user has documents" in {
       val answers = emptyUserAnswers.set(AnyDocumentsPage, true).success.value
 
-      navigator.navigateFromAnyDocumentsPage(answers) mustBe controllers.routes.JourneyRecoveryController.onPageLoad()
+      navigator.navigateFromAnyDocumentsPage(answers) mustBe supportingDocumentsRoutes.UploadFileController.onPageLoad()
+      navigator.navigateFromAnyDocumentsPage(answers).url mustBe "/file-eu-vat/supporting-documents/upload-file"
     }
 
     "must go from AnyDocumentsPage to TaskListDashboardController when the user has no documents" in {

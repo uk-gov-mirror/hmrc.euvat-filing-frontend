@@ -56,7 +56,7 @@ class AnyDocumentsControllerSpec extends SpecBase {
       }
     }
 
-    "must save yes and redirect to journey recovery while upload is unavailable" in {
+    "must save yes and redirect to the upload file page" in {
       when(mockSessionRepository.set(any())).thenReturn(Future.successful(true))
       val application = applicationBuilder(userAnswers = Some(emptyUserAnswers))
         .overrides(bind[SessionRepository].toInstance(mockSessionRepository))
@@ -68,7 +68,7 @@ class AnyDocumentsControllerSpec extends SpecBase {
         val result = route(application, request).value
 
         status(result) mustEqual SEE_OTHER
-        redirectLocation(result).value mustEqual controllers.routes.JourneyRecoveryController.onPageLoad().url
+        redirectLocation(result).value mustEqual "/file-eu-vat/supporting-documents/upload-file"
         val savedAnswers = org.mockito.ArgumentCaptor.forClass(classOf[models.UserAnswers])
         org.mockito.Mockito.verify(mockSessionRepository).set(savedAnswers.capture())
         savedAnswers.getValue.get(AnyDocumentsPage) mustBe Some(true)

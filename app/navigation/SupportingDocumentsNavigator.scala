@@ -31,7 +31,7 @@ class SupportingDocumentsNavigator @Inject() () {
 
   def navigateFromAnyDocumentsPage(userAnswers: UserAnswers): Call =
     userAnswers.get(AnyDocumentsPage) match {
-      case Some(true)  => controllers.routes.JourneyRecoveryController.onPageLoad()
+      case Some(true)  => supportingDocumentsRoutes.UploadFileController.onPageLoad()
       case Some(false) => controllers.routes.TaskListDashboardController.onPageLoad()
       case None        => controllers.routes.JourneyRecoveryController.onPageLoad()
     }

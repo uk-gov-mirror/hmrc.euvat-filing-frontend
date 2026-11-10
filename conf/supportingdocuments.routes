@@ -3,3 +3,6 @@ POST        /before-you-start                     controllers.supportingdocument
 
 GET         /any-documents                        controllers.supportingdocuments.AnyDocumentsController.onPageLoad()
 POST        /any-documents                        controllers.supportingdocuments.AnyDocumentsController.onSubmit()
+
+GET         /upload-file                          controllers.supportingdocuments.UploadFileController.onPageLoad()
+POST        /upload-file                          controllers.supportingdocuments.UploadFileController.onSubmit()
