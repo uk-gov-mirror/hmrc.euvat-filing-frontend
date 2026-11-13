@@ -109,7 +109,18 @@ class UploadFileControllerSpec extends SpecBase {
           val errorPage = route(application, errorPageRequest).value
 
           status(errorPage) mustEqual OK
-          contentAsString(errorPage) must include(messages(application)("supportingDocuments.uploadFile.error.empty"))
+          val errorContent = contentAsString(errorPage)
+          errorContent must include(messages(application)("supportingDocuments.uploadFile.error.empty"))
+          errorContent must include("""id="file-upload-1-error"""")
+          errorContent must include("""aria-describedby="file-upload-1-error file-upload-1-hint"""")
+          val errorGroupStart = errorContent.indexOf("""class="govuk-form-group govuk-form-group--error"""")
+          val captionPosition = errorContent.indexOf(
+            s"""<span class="govuk-caption-l">${messages(application)("supportingDocuments.caption")}</span>"""
+          )
+          val headingPosition = errorContent.indexOf("<h1 class=\"govuk-label-wrapper\">")
+          errorGroupStart must be >= 0
+          captionPosition must be > errorGroupStart
+          headingPosition must be > captionPosition
           header("Cache-Control", errorPage).value mustEqual "no-store"
           val freshToken = formTokenFrom(contentAsString(errorPage))
 
