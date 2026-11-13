@@ -47,7 +47,7 @@ class UploadFileControllerSpec extends SpecBase {
         routes.UploadFileController.onPageLoad().url mustEqual "/file-eu-vat/supporting-documents/upload-file"
         content must include("<title>Upload file - EU VAT - GOV.UK</title>")
         content must include("<h1 class=\"govuk-label-wrapper\">")
-        content must include(messages(application)("supportingDocuments.caption"))
+        content must include(s"""<span class="govuk-caption-l">${messages(application)("supportingDocuments.caption")}</span>""")
         content must include(messages(application)("supportingDocuments.uploadFile.file.hint"))
         content must include(messages(application)("supportingDocuments.uploadFile.description.label"))
         content must include("name=\"file-upload-1\"")

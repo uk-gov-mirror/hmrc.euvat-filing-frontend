@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
-@import uk.gov.hmrc.govukfrontend.views.viewmodels.content.HtmlContent
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.errormessage.ErrorMessage
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fileupload.FileUpload
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.hint.Hint
@@ -34,14 +33,10 @@
 
 @(form: Form[Option[String]], formToken: String)(implicit request: Request[_], messages: Messages)
 
-@uploadFileLabelContent = {
-    <span class="govuk-caption-l">@messages("supportingDocuments.caption")</span>
-    @messages("supportingDocuments.uploadFile.heading")
-}
-
 @layout(
     pageTitle = titleNoForm(messages("supportingDocuments.uploadFile.title"))
 ) {
+    <span class="govuk-caption-l">@messages("supportingDocuments.caption")</span>
     @formHelper(
         action = controllers.supportingdocuments.routes.UploadFileController.onSubmit(),
         Symbol("enctype") -> "multipart/form-data",
@@ -57,7 +52,7 @@
                 label = Label(
                     isPageHeading = true,
                     classes = "govuk-label--l",
-                    content = HtmlContent(uploadFileLabelContent)
+                    content = Text(messages("supportingDocuments.uploadFile.heading"))
                 ),
                 hint = Some(Hint(content = Text(messages("supportingDocuments.uploadFile.file.hint")))),
                 errorMessage = form
