@@ -58,10 +58,11 @@
 }
 
 @layout(
-    pageTitle = titleNoForm(messages("supportingDocuments.uploadFile.title"))
+    pageTitle = title(form, messages("supportingDocuments.uploadFile.title")).trim
 ) {
     @formHelper(
         action = controllers.supportingdocuments.routes.UploadFileController.onSubmit(),
+        Symbol("autoComplete") -> "off",
         Symbol("enctype") -> "multipart/form-data",
         Symbol("novalidate") -> "novalidate"
     ) {

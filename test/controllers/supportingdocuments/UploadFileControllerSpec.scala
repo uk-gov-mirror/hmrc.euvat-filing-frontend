@@ -50,6 +50,7 @@ class UploadFileControllerSpec extends SpecBase {
         content must include(s"""<span class="govuk-caption-l">${messages(application)("supportingDocuments.caption")}</span>""")
         content must include(messages(application)("supportingDocuments.uploadFile.file.hint"))
         content must include(messages(application)("supportingDocuments.uploadFile.description.label"))
+        content must include("""autoComplete="off"""")
         content must include("name=\"file-upload-1\"")
         content must include("name=\"fileuploadDescription\"")
         content must include(s"""name="$formTokenField"""")
@@ -110,6 +111,9 @@ class UploadFileControllerSpec extends SpecBase {
 
           status(errorPage) mustEqual OK
           val errorContent = contentAsString(errorPage)
+          errorContent must include(
+            s"""<title>${messages(application)("error.title.prefix")} ${messages(application)("supportingDocuments.uploadFile.title")}"""
+          )
           errorContent must include(messages(application)("supportingDocuments.uploadFile.error.empty"))
           errorContent must include("""id="file-upload-1-error"""")
           errorContent must include("""aria-describedby="file-upload-1-error file-upload-1-hint"""")
