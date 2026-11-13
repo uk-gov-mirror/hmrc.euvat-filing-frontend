@@ -32,19 +32,22 @@
     mainErrorSummary: MainErrorSummary
 )
 
-@(form: Form[Option[String]])(implicit request: Request[_], messages: Messages)
+@(form: Form[Option[String]], formToken: String)(implicit request: Request[_], messages: Messages)
 
 @uploadFileLabelContent = {
     <span class="govuk-caption-l">@messages("supportingDocuments.caption")</span>
     @messages("supportingDocuments.uploadFile.heading")
 }
 
-@layout(pageTitle = titleNoForm(messages("supportingDocuments.uploadFile.title"))) {
+@layout(
+    pageTitle = titleNoForm(messages("supportingDocuments.uploadFile.title"))
+) {
     @formHelper(
         action = controllers.supportingdocuments.routes.UploadFileController.onSubmit(),
         Symbol("enctype") -> "multipart/form-data",
         Symbol("novalidate") -> "novalidate"
     ) {
+        <input type="hidden" name="uploadFileFormToken" value="@formToken">
         @mainErrorSummary(form, Map("file" -> "file-upload-1", "fileuploadDescription" -> "fileupload-description"))
 
         @govukFileUpload(
